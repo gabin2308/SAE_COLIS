@@ -34,24 +34,18 @@ def close_db(e=None):
 
 
 def init_db():
-
     from app import app
-
     with app.app_context():
-
-        os.makedirs(
-            os.path.dirname(app.config["DATABASE"]),
-            exist_ok=True
-        )
+        db_path = app.config["DATABASE"]
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        
+        db_exists = os.path.exists(db_path) and os.path.getsize(db_path) > 0
 
         db = get_db()
 
- # Création des tables
-        with open(schema_path, "r", encoding="utf-8") as f:
-            db.executescript(f.read())
-
-
-        db.commit()
-
+        if not db_exists:
+            with open(schema_path, "r", encoding="utf-8") as f:
+                db.executescript(f.read())
+            db.commit()
 
         app.teardown_appcontext(close_db)

@@ -56,7 +56,7 @@ class UtilisateurDAO:
 
    
 
-    def create_local(self, full_name, email, password, role_id, departement_id):
+    def create_local(self, full_name, email, password,role_id = 6 ,departement_id=None):
 
         if not departement_id:
             raise ValueError("departement_id obligatoire")
@@ -207,3 +207,14 @@ class UtilisateurDAO:
             (email, uid_cas)
         )
         return Utilisateur(dict(row)) if row else None
+    
+    # def get_by_role(self, libelle_role):
+    #     conn = get_db()
+    #     rows = conn.execute("""
+    #         SELECT u.*, r.libelle AS role_libelle, d.nom AS departement_nom
+    #         FROM utilisateur u
+    #         LEFT JOIN role r ON u.role_id = r.id_role
+    #         LEFT JOIN departement d ON u.departement_id = d.id_departement
+    #         WHERE r.libelle = ?
+    #     """, (libelle_role,)).fetchall()
+    #     return [Utilisateur(dict(r)) for r in rows]

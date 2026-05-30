@@ -1,15 +1,4 @@
 -- SQLite sae_colis
-DROP TABLE IF EXISTS historique_colis;
-DROP TABLE IF EXISTS notification;
-DROP TABLE IF EXISTS colis;
-DROP TABLE IF EXISTS statut_colis;
-DROP TABLE IF EXISTS bon_commande;
-DROP TABLE IF EXISTS devis;
-DROP TABLE IF EXISTS fournisseur;
-DROP TABLE IF EXISTS utilisateur;
-DROP TABLE IF EXISTS departement;
-DROP TABLE IF EXISTS role;
-
 PRAGMA foreign_keys = ON;
 
 -- Table Role
@@ -144,17 +133,32 @@ CREATE INDEX IF NOT EXISTS idx_notification_user ON notification(id_utilisateur)
 -- ('en_attente'),
 -- ('livre');
 
-INSERT OR IGNORE INTO role (libelle) VALUES
-('admin'),
-('postal_iut'),
-('postal_univ'),
-('finance'),
-('directeur'),
-('departement');
+-- INSERT OR IGNORE INTO role (libelle) VALUES
+-- ('admin'),
+-- ('postal_iut'),
+-- ('postal_univ'),
+-- ('finance'),
+-- ('directeur'),
+-- ('departement');
 
-INSERT OR IGNORE INTO departement (nom, telephone, budget_total, budget_utilise) VALUES
-('Informatique', '01 49 40 30 01', 50000, 12000),
-('Genie Civil', '01 49 40 30 02', 35000, 8000),
-('GEA', '01 49 40 30 03', 40000, 15000),
-('TC', '01 49 40 30 04', 30000, 5000),
-('MMI', '01 49 40 30 05', 45000, 20000);
+-- INSERT OR IGNORE INTO departement (nom, telephone, budget_total, budget_utilise) VALUES
+-- ('Informatique', '01 49 40 30 01', 50000, 12000),
+-- ('Genie Civil', '01 49 40 30 02', 35000, 8000),
+-- ('GEA', '01 49 40 30 03', 40000, 15000),
+-- ('TC', '01 49 40 30 04', 30000, 5000),
+-- ('MMI', '01 49 40 30 05', 45000, 20000);
+
+CREATE TABLE IF NOT EXISTS demande_achat (
+    id_demande INTEGER PRIMARY KEY AUTOINCREMENT,
+    objet TEXT NOT NULL,
+    description TEXT,
+    montant_estime REAL,
+    statut TEXT DEFAULT 'en_attente',
+    date_demande TEXT DEFAULT (datetime('now')),
+    date_traitement TEXT,
+    commentaire_responsable TEXT,
+    demandeur_id INTEGER NOT NULL,
+    departement_id INTEGER NOT NULL,
+    FOREIGN KEY (demandeur_id) REFERENCES utilisateur(id_utilisateur),
+    FOREIGN KEY (departement_id) REFERENCES departement(id_departement)
+);

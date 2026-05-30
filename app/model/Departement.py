@@ -1,5 +1,3 @@
-
-
 class Departement:
     def __init__(self, dico):
         self.id_departement = dico.get('id_departement')

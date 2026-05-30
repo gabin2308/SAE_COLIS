@@ -8,7 +8,6 @@ class Utilisateur:
         self.password = dico.get('password')
         self.role_id = dico.get('role_id')
         self.departement_id = dico.get('departement_id')
-        # Jointures optionnelles
         self.role_libelle = dico.get('role_libelle')
         self.departement_nom = dico.get('departement_nom')
 
