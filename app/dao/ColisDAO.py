@@ -1,6 +1,5 @@
 from app.database.initdb import get_db
 from app.model.Colis import Colis
-
 class ColisDAO:
 
     def _base_select(self):
@@ -113,3 +112,10 @@ class ColisDAO:
         cursor = conn.execute("DELETE FROM colis WHERE id_colis = ?", (id_colis,))
         conn.commit()
         return cursor.rowcount
+    
+    def get_statut_id_by_libelle(self, libelle):
+        conn = get_db()
+        row = conn.execute(
+            "SELECT id_statut FROM statut_colis WHERE libelle = ?", (libelle,)
+        ).fetchone()
+        return row['id_statut'] if row else None

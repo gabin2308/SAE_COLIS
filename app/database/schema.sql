@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS colis (
     id_colis INTEGER PRIMARY KEY AUTOINCREMENT,
     bon_commande_id INTEGER NOT NULL,
     statut_id INTEGER NOT NULL,
-    numero_suivi TEXT,
+    numero_suivi TEXT NOT NULL UNIQUE,
     code_barres TEXT,
     destinataire_id INTEGER,
     date_reception TEXT,
@@ -127,19 +127,21 @@ CREATE INDEX IF NOT EXISTS idx_colis_bon_commande ON colis(bon_commande_id);
 CREATE INDEX IF NOT EXISTS idx_colis_statut ON colis(statut_id);
 CREATE INDEX IF NOT EXISTS idx_notification_user ON notification(id_utilisateur);
 -- -- Statuts obligatoires (données de référence)
--- INSERT OR IGNORE INTO statut_colis (libelle) VALUES
--- ('recu_universite'),
--- ('transfere_iut'),
--- ('en_attente'),
--- ('livre');
+ INSERT OR IGNORE INTO statut_colis (libelle) VALUES
+('recu_universite'),
+('transfere_iut'),
+('en_attente'),
+('livre'),
+('probleme');
 
--- INSERT OR IGNORE INTO role (libelle) VALUES
--- ('admin'),
--- ('postal_iut'),
--- ('postal_univ'),
--- ('finance'),
--- ('directeur'),
--- ('departement');
+INSERT OR IGNORE INTO role (libelle) VALUES
+('admin'),
+('postal_iut'),
+('postal_univ'),
+('finance'),
+('directeur'),
+('departement'),
+('lecteur');
 
 -- INSERT OR IGNORE INTO departement (nom, telephone, budget_total, budget_utilise) VALUES
 -- ('Informatique', '01 49 40 30 01', 50000, 12000),

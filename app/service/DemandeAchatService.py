@@ -2,6 +2,8 @@ from app.dao.DemandeAchatDAO import DemandeAchatDAO
 from app.model.DemandeAchat import DemandeAchat
 from app.service.NotificationService import NotificationService
 from app.dao.UserDAO import UtilisateurDAO
+from app.service.DepartementService import DepartementService
+
 
 class DemandeAchatService:
 
@@ -9,6 +11,7 @@ class DemandeAchatService:
         self.dao = DemandeAchatDAO()
         self.notif = NotificationService()
         self.user_dao = UtilisateurDAO()
+        self.dep_service = DepartementService()  
 
     def get_all(self):
         return self.dao.get_all()
@@ -54,9 +57,15 @@ class DemandeAchatService:
         if demande.statut != 'en_attente':
             raise ValueError("Seules les demandes en attente peuvent être approuvées")
 
+        # Consomme le budget si un montant est estimé
+        if demande.montant_estime and demande.montant_estime > 0:
+            self.dep_service.consommer_budget(
+                demande.departement_id,
+                demande.montant_estime
+            )
+
         updated = self.dao.update_statut(id_demande, 'approuvee', commentaire)
 
-        # Notifie le demandeur
         self.notif.envoyer(
             demande.demandeur_id,
             f"Votre demande '{demande.objet}' a été approuvée."

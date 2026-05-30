@@ -56,7 +56,7 @@ class UtilisateurDAO:
 
    
 
-    def create_local(self, full_name, email, password,role_id = 6 ,departement_id=None):
+    def create_local(self, full_name, email, password,role_id,departement_id=None):
 
         if not departement_id:
             raise ValueError("departement_id obligatoire")

@@ -113,7 +113,6 @@ with app.app_context():
     colis = cs.create(
         bon_commande_id=bc.id_bon_commande,
         statut_id=statut.id_statut,
-        numero_suivi="SUIVI-TEST-001",
         destinataire_id=demandeur.id_utilisateur
     )
     print(f"Colis créé : {colis.to_dict()}")

@@ -6,7 +6,7 @@ from app.controller.UserController import login_required, reqrole
 class AdminUserController:
 
     def __init__(self):
-        self.blueprint = Blueprint('admin_user', __name__)
+        self.blueprint = Blueprint('users', __name__)
         self.us = UserService()
         self._register_routes()
 

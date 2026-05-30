@@ -4,15 +4,43 @@ import { useAuth } from "../context/AuthContext"
 export default function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth()
 
-  if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0a0f", color: "#7cf5c8", fontFamily: "monospace" }}>
-      Chargement...
-    </div>
-  )
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950 text-emerald-300">
+        Chargement...
+      </div>
+    )
+  }
 
-  if (!user) return <Navigate to="/" replace />
+  if (!user) {
+    return <Navigate to="/" replace />
+  }
 
-  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />
+  if (roles && !roles.includes(user.role)) {
+
+    switch (user.role) {
+      case "departement":
+        return <Navigate to="/departement" replace />
+
+      case "postal_iut":
+        return <Navigate to="/postal_iut" replace />
+
+      case "directeur":
+        return <Navigate to="/directeur" replace />
+
+      case "postal_univ":
+        return <Navigate to ="/postal_univ" replace/> 
+        
+      case "finance":
+        return <Navigate to="/finance" replace/>  
+
+      case "lecteur":
+        return <Navigate to="/lecteur" replace/>
+    
+      default:
+        return <Navigate to="/" replace />
+    }
+  }
 
   return children
 }

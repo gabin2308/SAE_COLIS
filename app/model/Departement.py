@@ -12,10 +12,10 @@ class Departement:
 
     def to_dict(self):
         return {
-            'id_departement': self.id_departement,
-            'nom': self.nom,
-            'telephone': self.telephone,
-            'budget_total': self.budget_total,
-            'budget_utilise': self.budget_utilise,
-            'budget_restant': self.budget_restant
+            "id_departement": self.id_departement,
+            "nom": self.nom,
+            "telephone": self.telephone,
+            "budget_total": self.budget_total,
+            "budget_utilise": self.budget_utilise,
+            "budget_restant": self.budget_restant,  # utilise la property
         }

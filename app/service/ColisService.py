@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.dao.ColisDAO import ColisDAO
-
+import uuid
 class ColisService:
 
     def __init__(self):
@@ -34,6 +34,9 @@ class ColisService:
                destinataire_id=None, commentaire=None, receptionne_par=None):
         if not bon_commande_id or not statut_id:
             raise ValueError("bon_commande_id et statut_id sont requis")
+        
+        if not numero_suivi:
+             numero_suivi = self.generate_numero_suivi()
         return self.dao.create(bon_commande_id, statut_id, numero_suivi, code_barres,
                                destinataire_id, commentaire, receptionne_par)
 
@@ -44,11 +47,15 @@ class ColisService:
     def receptionner(self, id_colis, receptionne_par):
         self.get_by_id(id_colis)
         date_reception = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        statut_id = self.dao.get_statut_id_by_libelle('transfere_iut')
+        self.dao.update_statut(id_colis, statut_id)        # ← statut_id directement
         return self.dao.update_reception(id_colis, receptionne_par, date_reception)
 
     def retirer(self, id_colis):
         self.get_by_id(id_colis)
         date_retrait = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        statut_id = self.dao.get_statut_id_by_libelle('livre')
+        self.dao.update_statut(id_colis, statut_id)        # ← statut_id directement
         return self.dao.update_retrait(id_colis, date_retrait)
 
     def update(self, id_colis, **kwargs):
@@ -58,3 +65,6 @@ class ColisService:
     def delete(self, id_colis):
         self.get_by_id(id_colis)
         return self.dao.delete(id_colis)
+    
+    def generate_numero_suivi(self):
+        return f"COLIS-{uuid.uuid4().hex[:10].upper()}"

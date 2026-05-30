@@ -8,7 +8,8 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
-    allowedHosts: ["wifelier-laverna-unheededly.ngrok-free.dev"],
+    allowedHosts: ["all"],
+    // allowedHosts: ["wifelier-laverna-unheededly.ngrok-free.dev"],
     proxy:{
       "/api": "http://localhost:5000"
     }

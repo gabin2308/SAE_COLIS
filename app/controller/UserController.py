@@ -77,7 +77,7 @@ class UserController:
         full_name = data.get('full_name').strip()
         email = data.get('email')
         password = data.get('password')
-        role_id = 6
+        role_id = 7
         departement_id = data.get('departement_id')
 
         if not all([full_name, email, password, role_id, departement_id]):
