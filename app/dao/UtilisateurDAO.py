@@ -1,14 +1,13 @@
 from app.database.initdb import get_db
-from app.model.User import Utilisateur
+from app.model.Utilisateur import Utilisateur
 from app import bcrypt
 
 
 class UtilisateurDAO:
 
-  
     def _base_select(self):
         return """
-            SELECT u.*, r.libelle AS role_libelle, d.nom AS departement_nom
+            SELECT u.*, r.libelle AS role_nom, d.nom AS departement_nom
             FROM utilisateur u
             JOIN role r ON u.role_id = r.id_role
             LEFT JOIN departement d ON u.departement_id = d.id_departement
@@ -22,7 +21,10 @@ class UtilisateurDAO:
         conn = get_db()
         return conn.execute(self._base_select() + where, params).fetchall()
 
-    
+    # ─────────────────────────────────────────
+    # READ
+    # ─────────────────────────────────────────
+
     def get_all(self):
         return [Utilisateur(dict(r)) for r in self._fetch_all()]
 
@@ -46,6 +48,22 @@ class UtilisateurDAO:
         rows = self._fetch_all(" WHERE u.departement_id = ?", (departement_id,))
         return [Utilisateur(dict(r)) for r in rows]
 
+    def get_by_cas_or_email(self, email, uid_cas):
+        row = self._fetch_one(
+            " WHERE u.email = ? OR u.uid_cas = ?",
+            (email, uid_cas)
+        )
+        return Utilisateur(dict(row)) if row else None
+
+    def get_responsable_departement(self, departement_id):
+        """Retourne le responsable d'un département.
+        Utile pour notifier le responsable quand un lecteur soumet une demande."""
+        row = self._fetch_one(
+            " WHERE u.departement_id = ? AND r.libelle = 'responsable_departement' LIMIT 1",
+            (departement_id,)
+        )
+        return Utilisateur(dict(row)) if row else None
+
     def search(self, query):
         q = f"%{query}%"
         rows = self._fetch_all(
@@ -54,16 +72,16 @@ class UtilisateurDAO:
         )
         return [Utilisateur(dict(r)) for r in rows]
 
-   
+    # ─────────────────────────────────────────
+    # CREATE
+    # ─────────────────────────────────────────
 
-    def create_local(self, full_name, email, password,role_id,departement_id=None):
-
+    def create_local(self, full_name, email, password, role_id, departement_id=None):
         if not departement_id:
             raise ValueError("departement_id obligatoire")
 
         conn = get_db()
 
-        # sécurité email unique
         if self.get_by_email(email):
             raise ValueError("Email déjà utilisé")
 
@@ -77,16 +95,12 @@ class UtilisateurDAO:
         conn.commit()
         return self.get_by_id(cursor.lastrowid)
 
-   
     def create_cas(self, *args, **kwargs):
         return self.create_or_link_cas(*args, **kwargs)
 
-   
     def create_or_link_cas(self, uid_cas, access_token, full_name, email, role_id, departement_id=None):
-
         conn = get_db()
 
-        # CAS déjà utilisé ailleurs ?
         existing_cas = self.get_by_uid_cas(uid_cas)
         if existing_cas and existing_cas.email != email:
             raise ValueError("CAS déjà lié à un autre compte")
@@ -94,8 +108,6 @@ class UtilisateurDAO:
         user = self.get_by_email(email)
 
         if user:
-
-            # CAS conflict
             if user.uid_cas and user.uid_cas != uid_cas:
                 raise ValueError("Compte déjà lié à un autre CAS")
 
@@ -116,28 +128,28 @@ class UtilisateurDAO:
         conn.commit()
         return self.get_by_id(cursor.lastrowid)
 
-   
-    def update(self, id_utilisateur, full_name=None, email=None, role_id=None, departement_id=None):
+    # ─────────────────────────────────────────
+    # UPDATE
+    # ─────────────────────────────────────────
 
+    def update(self, id_utilisateur, full_name=None, email=None, role_id=None, departement_id=None):
         user = self.get_by_id(id_utilisateur)
         if not user:
             return None
 
-        # email unique check
         if email and email != user.email:
             if self.get_by_email(email):
                 raise ValueError("Email déjà utilisé")
 
         conn = get_db()
-
         conn.execute("""
             UPDATE utilisateur
             SET fullName = ?, email = ?, role_id = ?, departement_id = ?
             WHERE id_utilisateur = ?
         """, (
-            full_name or user.full_name,
-            email or user.email,
-            role_id or user.role_id,
+            full_name      or user.fullName,
+            email          or user.email,
+            role_id        or user.role_id,
             departement_id or user.departement_id,
             id_utilisateur
         ))
@@ -146,9 +158,7 @@ class UtilisateurDAO:
         return self.get_by_id(id_utilisateur)
 
     def update_password(self, id_utilisateur, nouveau_password):
-
         conn = get_db()
-
         conn.execute("""
             UPDATE utilisateur SET password = ?
             WHERE id_utilisateur = ?
@@ -159,7 +169,6 @@ class UtilisateurDAO:
 
     def update_token(self, uid_cas, nouveau_token):
         conn = get_db()
-
         cursor = conn.execute("""
             UPDATE utilisateur
             SET access_token_api_cas = ?
@@ -169,20 +178,8 @@ class UtilisateurDAO:
         conn.commit()
         return cursor.rowcount
 
-  
-    def delete(self, id_utilisateur):
-        conn = get_db()
-        cursor = conn.execute(
-            "DELETE FROM utilisateur WHERE id_utilisateur = ?",
-            (id_utilisateur,)
-        )
-        conn.commit()
-        return cursor.rowcount
-
-    
     def link_cas(self, id_utilisateur, uid_cas, access_token):
         conn = get_db()
-
         conn.execute("""
             UPDATE utilisateur
             SET uid_cas = ?, access_token_api_cas = ?
@@ -192,7 +189,23 @@ class UtilisateurDAO:
         conn.commit()
         return self.get_by_id(id_utilisateur)
 
-   
+    # ─────────────────────────────────────────
+    # DELETE
+    # ─────────────────────────────────────────
+
+    def delete(self, id_utilisateur):
+        conn = get_db()
+        cursor = conn.execute(
+            "DELETE FROM utilisateur WHERE id_utilisateur = ?",
+            (id_utilisateur,)
+        )
+        conn.commit()
+        return cursor.rowcount
+
+    # ─────────────────────────────────────────
+    # UTILITAIRES
+    # ─────────────────────────────────────────
+
     def check_password(self, utilisateur, password):
         if not utilisateur or not utilisateur.password:
             return False
@@ -200,21 +213,3 @@ class UtilisateurDAO:
 
     def is_cas_linked(self, user):
         return bool(user and user.uid_cas)
-
-    def get_by_cas_or_email(self, email, uid_cas):
-        row = self._fetch_one(
-            " WHERE u.email = ? OR u.uid_cas = ?",
-            (email, uid_cas)
-        )
-        return Utilisateur(dict(row)) if row else None
-    
-    # def get_by_role(self, libelle_role):
-    #     conn = get_db()
-    #     rows = conn.execute("""
-    #         SELECT u.*, r.libelle AS role_libelle, d.nom AS departement_nom
-    #         FROM utilisateur u
-    #         LEFT JOIN role r ON u.role_id = r.id_role
-    #         LEFT JOIN departement d ON u.departement_id = d.id_departement
-    #         WHERE r.libelle = ?
-    #     """, (libelle_role,)).fetchall()
-    #     return [Utilisateur(dict(r)) for r in rows]

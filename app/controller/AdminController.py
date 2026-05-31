@@ -1,13 +1,13 @@
 from flask import Blueprint, request, jsonify, session
 from app import limiter
-from app.service.UserService import UserService
+from app.service.UtilisateurService import UtilisateurService
 from app.controller.UserController import login_required, reqrole
 
 class AdminUserController:
 
     def __init__(self):
         self.blueprint = Blueprint('users', __name__)
-        self.us = UserService()
+        self.us = UtilisateurService()
         self._register_routes()
 
     def _register_routes(self):

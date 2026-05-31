@@ -1,7 +1,7 @@
-from app.dao.UserDAO import UtilisateurDAO as UserDAO
+from app.dao.UtilisateurDAO import UtilisateurDAO as UserDAO
 
 
-class UserService:
+class UtilisateurService:
 
     def __init__(self):
         self.dao = UserDAO()

@@ -1,7 +1,7 @@
 from app.dao.DemandeAchatDAO import DemandeAchatDAO
 from app.model.DemandeAchat import DemandeAchat
 from app.service.NotificationService import NotificationService
-from app.dao.UserDAO import UtilisateurDAO
+from app.dao.UtilisateurDAO import UtilisateurDAO
 from app.service.DepartementService import DepartementService
 
 

@@ -2,7 +2,7 @@ from flask import request, jsonify, session, abort
 from flask import Blueprint
 from app import limiter
 from functools import wraps
-from app.service.UserService import UserService
+from app.service.UtilisateurService import UtilisateurService
 from app import app
 
 # Les décorateurs d'authentification et d'autorisation
@@ -32,7 +32,7 @@ def reqrole(*roles):
 
 #Controller pour les utilisateurs
 
-us = UserService()
+us = UtilisateurService()
 
 class UserController:
     def __init__(self):
