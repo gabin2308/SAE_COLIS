@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from app import limiter
 from app.service.UtilisateurService import UtilisateurService
-from app.controller.UserController import login_required, reqrole
+from app.controller.UtilisateurController import login_required, reqrole
 
 class AdminUserController:
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.DepartementService import DepartementService
-from app.controller.UserController import login_required, reqrole
+from app.controller.PermissionsController import login_required, reqrole
 
 class DepartementController:
 
@@ -32,7 +32,7 @@ class DepartementController:
             return jsonify({"error": str(e)}), 404
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def create(self):
         data = request.get_json(force=True, silent=True) or {}
@@ -50,7 +50,7 @@ class DepartementController:
             return jsonify({"error": str(e)}), 409
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def update(self, id_departement):
         data = request.get_json(force=True, silent=True) or {}
@@ -67,7 +67,7 @@ class DepartementController:
             return jsonify({"error": str(e)}), 404
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def consommerBudget(self, id_departement):
         data = request.get_json(force=True, silent=True) or {}
@@ -83,7 +83,7 @@ class DepartementController:
             return jsonify({"error": str(e)}), 400
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("10 per minute")
     def delete(self, id_departement):
         try:

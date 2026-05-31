@@ -9,12 +9,14 @@ from app.database.initdb import init_db
 from app.controller import register_all
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_jwt_extended import JWTManager
 
 load_dotenv()
 
 app = Flask(__name__, static_url_path="/static")
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "None"
+app.config["JWT_SECRET_KEY"] = "super-secret-change-moi"
 app.secret_key = os.getenv("SECRET_KEY")
 app.config.from_object(Config)
 
@@ -22,6 +24,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 CORS(app,origins=["http://localhost:5173"],
      supports_credentials=True)
 
+jwt = JWTManager(app)
 bcrypt = Bcrypt()
 
 bcrypt.init_app(app)

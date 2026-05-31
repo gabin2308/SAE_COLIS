@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.StatutColisService import StatutColisService
-from app.controller.UserController import login_required, reqrole
+from app.controller.PermissionsController import login_required, reqrole
 
 class StatutColisController:
 

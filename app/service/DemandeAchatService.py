@@ -28,8 +28,8 @@ class DemandeAchatService:
     def get_by_departement(self, departement_id):
         return self.dao.get_by_departement(departement_id)
 
-    def get_en_attente_departement(self, departement_id):
-        return self.dao.get_en_attente_departement(departement_id)
+    def get_en_attente_par_departement(self, departement_id):
+        return self.dao.get_en_attente_par_departement(departement_id)
 
     def create(self, objet, demandeur_id, departement_id,
                description=None, montant_estime=None):

@@ -1,10 +1,10 @@
 from datetime import datetime
 import uuid
 from app.dao.BonCommandeDAO import BonCommandeDAO
-from app.model.BonCommande import BonCommande
+
+STATUTS_VALIDES = ('en_preparation', 'valide_finance', 'expedie', 'livre_confirme', 'annule')
 
 class BonCommandeService:
-
     def __init__(self):
         self.dao = BonCommandeDAO()
 
@@ -26,12 +26,12 @@ class BonCommandeService:
     def get_by_departement(self, departement_id):
         return self.dao.get_by_departement(departement_id)
 
-    def get_by_createur(self, createur_id):
-        return self.dao.get_by_createur(createur_id)
+    def get_by_fournisseur(self, fournisseur_id):
+        return self.dao.get_by_fournisseur(fournisseur_id)
 
     def get_by_statut(self, statut):
-        if statut not in BonCommande.STATUTS:
-            raise ValueError(f"Statut invalide, valeurs possibles : {BonCommande.STATUTS}")
+        if statut not in STATUTS_VALIDES:
+            raise ValueError(f"Statut invalide, valeurs possibles : {STATUTS_VALIDES}")
         return self.dao.get_by_statut(statut)
 
     def _generer_numero(self):
@@ -41,28 +41,43 @@ class BonCommandeService:
 
     def create(self, departement_id, fournisseur_id, createur_id, devis_id,
                date_estimee_livraison=None, montant_estime=0, commentaire=None):
+        existing = self.dao.get_by_devis(devis_id)
+        if existing:
+            raise ValueError(f"Un bon de commande existe déjà pour le devis {devis_id}")
+        
         if not all([departement_id, fournisseur_id, createur_id, devis_id]):
             raise ValueError("departement_id, fournisseur_id, createur_id et devis_id sont requis")
-
         numero_commande = self._generer_numero()
-        date_commande = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        return self.dao.create(
-            numero_commande, date_commande, departement_id, fournisseur_id,
-            createur_id, devis_id, date_estimee_livraison, montant_estime, commentaire
+        return self.dao.create(                     # ✅ signature alignée avec le DAO
+            numero_commande=numero_commande,
+            departement_id=departement_id,
+            fournisseur_id=fournisseur_id,
+            createur_id=createur_id,
+            devis_id=devis_id,
+            montant_estime=montant_estime,
+            date_estimee_livraison=date_estimee_livraison,
+            commentaire=commentaire
         )
 
-    def update_statut(self, id_bon_commande, statut):
-        if statut not in BonCommande.STATUTS:
-            raise ValueError(f"Statut invalide, valeurs possibles : {BonCommande.STATUTS}")
+    def valider(self, id_bon_commande):             # ✅ méthodes métier du DAO
         self.get_by_id(id_bon_commande)
-        return self.dao.update_statut(id_bon_commande, statut)
+        return self.dao.valider(id_bon_commande)
 
-    def update(self, id_bon_commande, date_estimee_livraison=None,
-               montant_estime=None, commentaire=None):
+    def expedier(self, id_bon_commande):
         self.get_by_id(id_bon_commande)
-        return self.dao.update(id_bon_commande, date_estimee_livraison,
-                               montant_estime, commentaire)
+        return self.dao.expedier(id_bon_commande)
+
+    def confirmer_livraison(self, id_bon_commande):
+        self.get_by_id(id_bon_commande)
+        return self.dao.confirmer_livraison(id_bon_commande)
+
+    def annuler(self, id_bon_commande):
+        self.get_by_id(id_bon_commande)
+        return self.dao.annuler(id_bon_commande)
+
+    def update_commentaire(self, id_bon_commande, commentaire):
+        self.get_by_id(id_bon_commande)
+        return self.dao.update_commentaire(id_bon_commande, commentaire)
 
     def delete(self, id_bon_commande):
         self.get_by_id(id_bon_commande)
