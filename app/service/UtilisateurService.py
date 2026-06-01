@@ -27,16 +27,23 @@ class UtilisateurService:
     # ─────────────────────────────────────────
 
     def login(self, email, password):
-        user = self.dao.get_by_email(email)
+            user = self.dao.get_by_email(email)
 
-        if not user:
-            return None
+            if not user:
+                return {"success": False, "message": "Utilisateur non trouvé"}
 
-        if not self.dao.check_password(user, password):
-            return None
+            if not self.dao.check_password(user, password):
+                return {"success": False, "message": "Identifiants incorrects"}
 
-        return user
+            # Vérification du flag de changement de mot de passe
+            if user.password_must_change:
+                return {
+                    "success": True, 
+                    "must_change_password": True, 
+                    "user": user.to_dict()
+                }
 
+            return {"success": True, "must_change_password": False, "user": user.to_dict()}
     # ─────────────────────────────────────────
     # CAS
     # ─────────────────────────────────────────
@@ -119,19 +126,21 @@ class UtilisateurService:
     # ─────────────────────────────────────────
 
     def authenticate(self, email, password):
-        """
-        Version propre pour API login
-        Retourne un dict prêt API
-        """
-        user = self.login(email, password)
+        result = self.login(email, password)
 
-        if not user:
-            return {
-                "success": False,
-                "message": "Identifiants incorrects"
-            }
+        if not result["success"]:
+            return result
 
+        # Retourne le résultat complet incluant must_change_password
         return {
             "success": True,
-            "user": user.to_dict() if hasattr(user, "to_dict") else user
+            "must_change_password": result.get("must_change_password", False),
+            "user": result["user"]
         }
+    
+    def create_admin_managed_user(self, full_name, email, role_id, departement_id):
+        try:
+            # Appel de la méthode DAO créée précédemment
+            return self.dao.create_initial_user(full_name, email, role_id, departement_id)
+        except Exception as e:
+            raise Exception(f"Erreur création admin: {str(e)}")

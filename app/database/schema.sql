@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     password             TEXT,
     role_id              INTEGER NOT NULL,
     departement_id       INTEGER NOT NULL,
+    password_must_change INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (role_id)        REFERENCES role(id_role),
     FOREIGN KEY (departement_id) REFERENCES departement(id_departement)
 );

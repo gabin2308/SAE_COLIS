@@ -11,7 +11,7 @@ class Utilisateur:
         # Jointures
         self.role_nom             = dico.get('role_nom')
         self.departement_nom      = dico.get('departement_nom')
- 
+        self.password_must_change = dico.get('password_must_change', False)
     def to_dict(self):
         return {
             'id_utilisateur':  self.id_utilisateur,
@@ -19,8 +19,10 @@ class Utilisateur:
             'access_token_api_cas': self.access_token_api_cas,
             'fullName':        self.fullName,
             'email':           self.email,
+            'password':        self.password,
             'role_id':         self.role_id,
             'role_nom':        self.role_nom,
             'departement_id':  self.departement_id,
             'departement_nom': self.departement_nom,
+            'password_must_change': self.password_must_change,
         }

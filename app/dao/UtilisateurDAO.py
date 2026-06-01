@@ -1,6 +1,7 @@
 from app.database.initdb import get_db
 from app.model.Utilisateur import Utilisateur
 from app import bcrypt
+import secrets
 
 
 class UtilisateurDAO:
@@ -213,3 +214,32 @@ class UtilisateurDAO:
 
     def is_cas_linked(self, user):
         return bool(user and user.uid_cas)
+    
+
+    def update_password(self, id_utilisateur, nouveau_password):
+        conn = get_db()
+        # 1. Mise à jour du mot de passe haché
+        conn.execute("""
+            UPDATE utilisateur 
+            SET password = ?, password_must_change = 0
+            WHERE id_utilisateur = ?
+        """, (bcrypt.generate_password_hash(nouveau_password).decode('utf-8'), id_utilisateur))
+
+        conn.commit()
+        return self.get_by_id(id_utilisateur)
+    
+    def create_initial_user(self, full_name, email, role_id, departement_id):
+        # 1. Générer un mot de passe temporaire complexe (inconnu de l'utilisateur)
+        temp_password = secrets.token_urlsafe(32)
+        password_hash = bcrypt.generate_password_hash(temp_password).decode('utf-8')
+        
+        conn = get_db()
+        
+        # 2. Insertion avec password_must_change = 1
+        cursor = conn.execute("""
+            INSERT INTO utilisateur (fullName, email, password, role_id, departement_id, password_must_change)
+            VALUES (?, ?, ?, ?, ?, 1)
+        """, (full_name, email, password_hash, role_id, departement_id))
+        
+        conn.commit()
+        return self.get_by_id(cursor.lastrowid)

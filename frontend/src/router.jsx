@@ -5,6 +5,7 @@ import Dashboard from './pages/lecteur/Dashboard'
 import Demande from './pages/lecteur/Demande'
 import Colis from './pages/lecteur/Colis'
 import { useAuth } from './context/AuthContext'
+import DevisManager from './pages/lecteur/Devis'
 
 
 const ProtectedRoute = ({ children }) => {
@@ -26,5 +27,6 @@ export default createBrowserRouter([
   { path: '/dashboard', element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
   { path: '/demande', element: <ProtectedRoute><Demande /></ProtectedRoute> },
   { path: '/colis', element: <ProtectedRoute><Colis /></ProtectedRoute> },
+  { path: '/devis', element: <ProtectedRoute><DevisManager /></ProtectedRoute> },
   { path: '*', element: <Navigate to="/dashboard" replace /> }
 ])

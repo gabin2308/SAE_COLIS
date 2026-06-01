@@ -5,10 +5,18 @@ const BASE = "/auth"
 export const authService = {
   // 🔐 Connexion
   login: async (email, password) => {
-    // apiFetch renvoie directement les données JSON (ex: { access_token: "..." })
     return await apiFetch(`${BASE}/login`, {
       method: "POST",
       body: JSON.stringify({ email, password }),
+    })
+  },
+
+  // 🔑 Changer le mot de passe avec le token temporaire
+  changePassword: async (newPassword) => {
+    // Note : le userId est extrait côté serveur via le jeton JWT
+    return await apiFetch(`${BASE}/change-password`, {
+      method: "POST",
+      body: JSON.stringify({ new_password: newPassword }),
     })
   },
 
@@ -17,16 +25,23 @@ export const authService = {
     return await apiFetch(`${BASE}/me`)
   },
 
-  // 💾 Gestion du token dans le localStorage
+  // 💾 Gestion des jetons
   saveToken: (token) => {
     localStorage.setItem("token", token)
   },
 
-  getToken: () => {
-    return localStorage.getItem("token")
+  saveChangeToken: (token, userId) => {
+    localStorage.setItem("change_token", token)
+    localStorage.setItem("pending_user_id", userId)
+  },
+
+  clearAuth: () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("change_token")
+    localStorage.removeItem("pending_user_id")
   },
 
   logout: () => {
-    localStorage.removeItem("token")
+    authService.clearAuth()
   }
 }
