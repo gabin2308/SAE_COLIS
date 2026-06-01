@@ -261,13 +261,12 @@
 //     </div>
 //   )
 // }
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { colisService } from "../../services/colisService"
 import { demandeService } from "../../services/demandeService"
-import { devisService } from "../../services/devisService" // Import ajouté
+import { devisService } from "../../services/devisService"
 import Header from '../../components/ui/Header'
 import WelcomeRow from "../../components/ui/WelcomeRow"
 import Card from "../../components/ui/Card"
@@ -277,23 +276,25 @@ export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
+  // États pour les données
   const [allColis, setAllColis] = useState([])
   const [filteredColis, setFilteredColis] = useState([])
   const [demandes, setDemandes] = useState([])
-  const [devis, setDevis] = useState([]) // Nouvel état pour les devis
+  const [devis, setDevis] = useState([])
   const [searchSuivi, setSearchSuivi] = useState("")
   const [loading, setLoading] = useState(true)
+
+  // Définition des droits basée sur le rôle utilisateur
+  const isAgent = ["administrateur", "postal_iut", "postal_univ"].includes(user?.role)
+  const isFinancier = ["administrateur", "responsable_financier", "directeur"].includes(user?.role)
 
   const loadData = async () => {
     setLoading(true)
     try {
-      const isAgent = ["administrateur", "postal_iut", "postal_univ"].includes(user?.role)
-      const isFinancier = ["administrateur", "responsable_financier", "directeur"].includes(user?.role)
-
       const [colisData, demandesData, devisData] = await Promise.all([
         isAgent ? colisService.getAll() : colisService.getMesColis(),
         user?.role === "administrateur" ? demandeService.getAll() : demandeService.getMesDemandes(),
-        isFinancier ? devisService.getAll() : [] // Chargement conditionnel selon le rôle
+        isFinancier ? devisService.getAll() : Promise.resolve([])
       ])
 
       setAllColis(colisData || [])
@@ -307,7 +308,9 @@ export default function Dashboard() {
     }
   }
 
-  useEffect(() => { loadData() }, [user])
+  useEffect(() => { 
+    if (user) loadData() 
+  }, [user])
 
   const handleSearchChange = (e) => {
     const value = e.target.value
@@ -350,18 +353,18 @@ export default function Dashboard() {
         </div>
 
         {loading ? (
-          <div className="text-center text-slate-500 py-12">Chargement...</div>
+          <div className="text-center text-slate-500 py-12">Chargement des données...</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Colonne Colis */}
             <Card title="📦 Colis récents" actionText="Voir tout" onActionClick={() => navigate("/colis")}>
               {filteredColis.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">Aucun colis.</p>
+                <p className="text-sm text-slate-400 text-center py-8">Aucun colis trouvé.</p>
               ) : (
                 <div className="space-y-3">
                   {filteredColis.map((c) => (
-                    <div key={`colis-${c.id_colis || c.id}`} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div key={c.id_colis || c.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <div>
                         <div className="text-sm font-semibold">{c.numero_suivi}</div>
                         <div className="text-xs text-slate-400">BC: #{c.bon_commande_id}</div>
@@ -380,7 +383,7 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   {demandes.slice(0, 5).map((d) => (
-                    <div key={`demande-${d.id}`} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div key={d.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <div className="truncate max-w-[60%]">
                         <div className="text-sm font-semibold truncate">{d.description}</div>
                         <div className="text-xs text-slate-400">{new Date(d.date_creation).toLocaleDateString("fr-FR")}</div>
@@ -392,25 +395,26 @@ export default function Dashboard() {
               )}
             </Card>
 
-            {/* Colonne Devis */}
-            <Card title="📝 Devis récents" actionText="Voir tout" onActionClick={() => navigate("/devis")}>
-              {devis.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">Aucun devis.</p>
-              ) : (
-                <div className="space-y-3">
-                  {devis.slice(0, 5).map((d) => (
-                    <div key={`devis-${d.id_devis}`} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="truncate max-w-[60%]">
-                        <div className="text-sm font-semibold truncate">{d.objet || "Sans objet"}</div>
-                        <div className="text-xs text-slate-400">{d.montant_estime ? `${d.montant_estime}€` : "N/A"}</div>
+            {/* Colonne Devis (Conditionnée par le rôle financier) */}
+            {isFinancier && (
+              <Card title="📝 Devis récents" actionText="Voir tout" onActionClick={() => navigate("/devis")}>
+                {devis.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-8">Aucun devis.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {devis.slice(0, 5).map((d) => (
+                      <div key={d.id_devis} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div className="truncate max-w-[60%]">
+                          <div className="text-sm font-semibold truncate">{d.objet || "Sans objet"}</div>
+                          <div className="text-xs text-slate-400">{d.montant_estime ? `${d.montant_estime}€` : "N/A"}</div>
+                        </div>
+                        <StatusBadge status={d.statut} />
                       </div>
-                      <StatusBadge status={d.statut} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
         )}
       </main>
