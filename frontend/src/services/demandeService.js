@@ -2,87 +2,61 @@ import { apiFetch } from "./api"
 
 const BASE = "/demande_achat"
 
-export const demandeAchatService = {
+export const demandeService = {
 
-  // 🔍 Toutes les demandes
+  // 🔍 Toutes les demandes (Admin)
   getAll: async () => {
-    const res = await apiFetch(`${BASE}/`)
-    if (!res.ok) throw new Error("Erreur chargement demandes")
-    return res.json()
+    return await apiFetch(`${BASE}/`)
   },
 
   // 🔍 Une demande par ID
   getById: async (id) => {
-    const res = await apiFetch(`${BASE}/${id}`)
-    if (!res.ok) throw new Error("Demande introuvable")
-    return res.json()
+    return await apiFetch(`${BASE}/${id}`)
   },
 
   // 👤 Mes demandes (user connecté)
   getMesDemandes: async () => {
-    const res = await apiFetch(`${BASE}/mes-demandes`)
-    if (!res.ok) throw new Error("Erreur mes demandes")
-    return res.json()
+    return await apiFetch(`${BASE}/mes-demandes`)
   },
 
   // 🏢 Par département
   getByDepartement: async (departementId) => {
-    const res = await apiFetch(`${BASE}/departement/${departementId}`)
-    if (!res.ok) throw new Error("Erreur département")
-    return res.json()
+    return await apiFetch(`${BASE}/departement/${departementId}`)
   },
 
   // ⏳ En attente par département
   getEnAttente: async (departementId) => {
-    const res = await apiFetch(`${BASE}/departement/${departementId}/en-attente`)
-    if (!res.ok) throw new Error("Erreur demandes en attente")
-    return res.json()
+    return await apiFetch(`${BASE}/departement/${departementId}/en-attente`)
   },
 
   // ➕ Créer une demande
   create: async (data) => {
-    const res = await apiFetch(`${BASE}/`, {
+    return await apiFetch(`${BASE}/`, {
       method: "POST",
       body: JSON.stringify(data)
     })
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      throw new Error(err.error || "Erreur création demande")
-    }
-
-    return res.json()
   },
 
-  // ✅ Approuver
+  // ✅ Approuver une demande
   approuver: async (id, commentaire = "") => {
-    const res = await apiFetch(`${BASE}/${id}/approuver`, {
+    return await apiFetch(`${BASE}/${id}/approuver`, {
       method: "PATCH",
       body: JSON.stringify({ commentaire })
     })
-
-    if (!res.ok) throw new Error("Erreur approbation")
-    return res.json()
   },
 
-  // ❌ Refuser
+  // ❌ Refuser une demande
   refuser: async (id, commentaire = "") => {
-    const res = await apiFetch(`${BASE}/${id}/refuser`, {
+    return await apiFetch(`${BASE}/${id}/refuser`, {
       method: "PATCH",
       body: JSON.stringify({ commentaire })
     })
-
-    if (!res.ok) throw new Error("Erreur refus")
-    return res.json()
   },
 
-  // 🗑 supprimer
+  // 🗑 Supprimer une demande
   delete: async (id) => {
-    const res = await apiFetch(`${BASE}/${id}`, {
+    return await apiFetch(`${BASE}/${id}`, {
       method: "DELETE"
     })
-
-    if (!res.ok) throw new Error("Erreur suppression")
-    return res.json()
   }
 }

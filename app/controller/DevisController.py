@@ -3,7 +3,7 @@ from flask_jwt_extended import get_jwt_identity
 from app import limiter
 from app.service.DevisService import DevisService
 from app.controller.PermissionsController import login_required, reqrole
-
+import logging
 
 class DevisController:
 
@@ -13,15 +13,15 @@ class DevisController:
         self._register_routes()
 
     def _register_routes(self):
-        self.blueprint.add_url_rule('/',                                view_func=self.getAll,          methods=['GET'])
-        self.blueprint.add_url_rule('/<int:id_devis>',                  view_func=self.getById,         methods=['GET'])
-        self.blueprint.add_url_rule('/fournisseur/<int:fournisseur_id>',view_func=self.getByFournisseur,methods=['GET'])
-        self.blueprint.add_url_rule('/statut/<string:statut>',          view_func=self.getByStatut,     methods=['GET'])
-        self.blueprint.add_url_rule('/',                                view_func=self.create,          methods=['POST'])
-        self.blueprint.add_url_rule('/<int:id_devis>',                  view_func=self.update,          methods=['PUT'])
-        self.blueprint.add_url_rule('/<int:id_devis>/accepter',         view_func=self.accepter,        methods=['PATCH'])
-        self.blueprint.add_url_rule('/<int:id_devis>/refuser',          view_func=self.refuser,         methods=['PATCH'])
-        self.blueprint.add_url_rule('/<int:id_devis>',                  view_func=self.delete,          methods=['DELETE'])
+        self.blueprint.add_url_rule('/', view_func=self.getAll, methods=['GET'])
+        self.blueprint.add_url_rule('/<int:id_devis>', view_func=self.getById, methods=['GET'])
+        self.blueprint.add_url_rule('/fournisseur/<int:fournisseur_id>', view_func=self.getByFournisseur, methods=['GET'])
+        self.blueprint.add_url_rule('/statut/<string:statut>', view_func=self.getByStatut, methods=['GET'])
+        self.blueprint.add_url_rule('/', view_func=self.create, methods=['POST'])
+        self.blueprint.add_url_rule('/<int:id_devis>', view_func=self.update, methods=['PUT'])
+        self.blueprint.add_url_rule('/<int:id_devis>/accepter', view_func=self.accepter, methods=['PATCH'])
+        self.blueprint.add_url_rule('/<int:id_devis>/refuser', view_func=self.refuser, methods=['PATCH'])
+        self.blueprint.add_url_rule('/<int:id_devis>', view_func=self.delete, methods=['DELETE'])
 
     @reqrole('administrateur', 'responsable_financier', 'directeur')
     def getAll(self):
@@ -35,6 +35,9 @@ class DevisController:
             return jsonify(devis.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération du devis {id_devis}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier', 'directeur')
     def getByFournisseur(self, fournisseur_id):
@@ -53,21 +56,21 @@ class DevisController:
     @limiter.limit("30 per minute")
     def create(self):
         data = request.get_json(force=True, silent=True) or {}
-        fournisseur_id = data.get('fournisseur_id')
-        if not fournisseur_id:
+        if not data.get('fournisseur_id'):
             return jsonify({"error": "fournisseur_id est requis"}), 400
         try:
             devis = self.ds.create(
-                fournisseur_id=fournisseur_id,
-                createur_id=int(get_jwt_identity()),  # ✅ JWT
+                fournisseur_id=data['fournisseur_id'],
+                createur_id=int(get_jwt_identity()),
                 objet=data.get('objet'),
                 montant_estime=data.get('montant_estime'),
                 fichier_pdf=data.get('fichier_pdf'),
                 demande_id=data.get('demande_id')
             )
             return jsonify(devis.to_dict()), 201
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            logging.error(f"Erreur création devis: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier')
     @limiter.limit("30 per minute")
@@ -83,6 +86,9 @@ class DevisController:
             return jsonify(devis.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur mise à jour devis {id_devis}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier', 'directeur')
     @limiter.limit("30 per minute")
@@ -110,6 +116,8 @@ class DevisController:
             return jsonify({"message": "Devis supprimé"}), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
-
+        except Exception as e:
+            logging.error(f"Erreur suppression devis {id_devis}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
 ctrl = DevisController()

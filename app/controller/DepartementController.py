@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.DepartementService import DepartementService
 from app.controller.PermissionsController import login_required, reqrole
+import logging
 
 class DepartementController:
 
@@ -18,7 +19,7 @@ class DepartementController:
         self.blueprint.add_url_rule('/<int:id_departement>', view_func=self.delete, methods=['DELETE'])
         self.blueprint.add_url_rule('/<int:id_departement>/budget', view_func=self.consommerBudget, methods=['PATCH'])
 
-    
+    @login_required
     def getAll(self):
         deps = self.ds.get_all()
         return jsonify([d.to_dict() for d in deps]), 200
@@ -30,8 +31,10 @@ class DepartementController:
             return jsonify(dep.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération du département {id_departement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
     @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def create(self):
@@ -48,13 +51,14 @@ class DepartementController:
             return jsonify(dep.to_dict()), 201
         except ValueError as e:
             return jsonify({"error": str(e)}), 409
+        except Exception as e:
+            logging.error(f"Erreur lors de la création du département: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
     @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def update(self, id_departement):
         data = request.get_json(force=True, silent=True) or {}
-
         try:
             dep = self.ds.update(
                 id_departement,
@@ -65,8 +69,10 @@ class DepartementController:
             return jsonify(dep.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur mise à jour département {id_departement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
     @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def consommerBudget(self, id_departement):
@@ -81,8 +87,10 @@ class DepartementController:
             return jsonify(dep.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            logging.error(f"Erreur consommation budget département {id_departement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
     @reqrole('administrateur')
     @limiter.limit("10 per minute")
     def delete(self, id_departement):
@@ -91,5 +99,8 @@ class DepartementController:
             return jsonify({"message": "Département supprimé"}), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur suppression département {id_departement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
 ctrl = DepartementController()

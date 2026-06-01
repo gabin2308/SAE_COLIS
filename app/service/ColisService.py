@@ -1,14 +1,19 @@
 from datetime import datetime
-from app.dao.ColisDAO import ColisDAO
+import os
 import uuid
 import qrcode
-import os
+from app.dao.ColisDAO import ColisDAO
+from app.dao.EvenementColisDAO import EvenementColisDAO
+from app.service.EvenementColisService import EvenementColisService
 
 QR_DIR = os.path.join(os.path.dirname(__file__), '..', 'static', 'qr')
 
 class ColisService:
-    def __init__(self):
+
+    def __init__(self, evenement_service=None):
         self.dao = ColisDAO()
+        # Injection du service d'événements pour l'historisation automatique
+        self.evenement_service = evenement_service or EvenementColisService()
 
     def get_all(self):
         return self.dao.get_all()
@@ -32,13 +37,13 @@ class ColisService:
         return self.dao.get_by_bon_commande(bon_commande_id)
 
     def create(self, bon_commande_id, numero_suivi=None, statut_libelle='recu_universite',
-               destinataire_id=None, code_barres=None, commentaire=None):
+               destinataire_id=None, code_barres=None, commentaire=None, agent_id=None):
         if not bon_commande_id:
             raise ValueError("bon_commande_id est requis")
         if not numero_suivi:
             numero_suivi = self.generate_numero_suivi()
 
-        # Créer le colis en base
+        # 1. Création initiale du colis
         colis = self.dao.create(
             bon_commande_id, numero_suivi, statut_libelle,
             destinataire_id, code_barres, commentaire
@@ -46,31 +51,79 @@ class ColisService:
         if not colis:
             raise ValueError("Erreur création colis")
 
-        # Générer le QR code
+        # 2. Génération du QR Code conforme à la nomenclature "COL:{id}:{suivi}"
         qr_image_path, qr_payload = self._generer_qr(colis.id_colis, numero_suivi)
 
-        # Mettre à jour en base
-        self.dao.update_qr(colis.id_colis,
-                        qr_payload=qr_payload,
-                        qr_image_path=qr_image_path)
+        # 3. Mise à jour des informations QR
+        self.dao.update_qr(colis.id_colis, qr_payload=qr_payload, qr_image_path=qr_image_path)
+
+        # 4. Historisation de la création / première réception
+        self.evenement_service.create(
+            colis_id=colis.id_colis,
+            action='scan_reception',
+            statut_libelle=statut_libelle,
+            utilisateur_id=agent_id,
+            commentaire="Création et enregistrement initial du colis"
+        )
 
         return self.dao.get_by_id(colis.id_colis)
 
     def receptionner(self, id_colis, agent_id):
-        self.get_by_id(id_colis)
-        return self.dao.receptionner(id_colis, agent_id)
+        self.get_by_id(id_colis) # Validation de l'existence
+        result = self.dao.receptionner(id_colis, agent_id)
+        
+        # Tracer le scan de réception
+        self.evenement_service.create(
+            colis_id=id_colis,
+            action='scan_reception',
+            statut_libelle='recu_universite',
+            utilisateur_id=agent_id,
+            localisation='Bureau Central Université'
+        )
+        return result
 
-    def retirer(self, id_colis):
+    def transferer_iut(self, id_colis, agent_id=None):
         self.get_by_id(id_colis)
-        return self.dao.remettre_destinataire(id_colis)
+        result = self.dao.transferer_iut(id_colis)
+        
+        # Tracer le transfert logistique
+        self.evenement_service.create(
+            colis_id=id_colis,
+            action='transfert_iut',
+            statut_libelle='transfere_iut',
+            utilisateur_id=agent_id,
+            localisation='Transit vers Bureau Postal IUT'
+        )
+        return result
 
-    def signaler_incident(self, id_colis, commentaire=None):
+    def retirer(self, id_colis, agent_id=None):
         self.get_by_id(id_colis)
-        return self.dao.signaler_incident(id_colis, commentaire)
+        result = self.dao.remettre_destinataire(id_colis)
+        
+        # Tracer la remise finale en main propre
+        self.evenement_service.create(
+            colis_id=id_colis,
+            action='remise_destinataire',
+            statut_libelle='remis_destinataire',
+            utilisateur_id=agent_id,
+            commentaire='Remis en main propre au destinataire'
+        )
+        return result
 
-    def transferer_iut(self, id_colis):
+    def signaler_incident(self, id_colis, commentaire=None, agent_id=None):
+        # Correction du nom de la méthode : signaling_incident -> signaler_incident
         self.get_by_id(id_colis)
-        return self.dao.transferer_iut(id_colis)
+        result = self.dao.signaler_incident(id_colis, commentaire)
+        
+        # Tracer l'incident technique ou logistique
+        self.evenement_service.create(
+            colis_id=id_colis,
+            action='incident',
+            statut_libelle='incident',
+            utilisateur_id=agent_id,
+            commentaire=commentaire or "Incident signalé sur le colis"
+        )
+        return result
 
     def update(self, id_colis, **kwargs):
         self.get_by_id(id_colis)
@@ -86,7 +139,8 @@ class ColisService:
     def _generer_qr(self, id_colis, numero_suivi):
         os.makedirs(QR_DIR, exist_ok=True)
 
-        qr_payload = numero_suivi  # ce qui est encodé dans le QR
+        # Alignement strict avec la nomenclature métier du schéma SQL
+        qr_payload = f"COL:{id_colis}:{numero_suivi}"
 
         qr = qrcode.QRCode(
             version=1,
@@ -102,9 +156,7 @@ class ColisService:
         filepath = os.path.join(QR_DIR, filename)
         img.save(filepath)
 
-        # Chemin relatif stocké en base — accessible via /static/qr/<id>.png
         qr_image_path = f"static/qr/{filename}"
-
         return qr_image_path, qr_payload
     
     def get_by_qr_payload(self, qr_payload):

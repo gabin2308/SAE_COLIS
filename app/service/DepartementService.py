@@ -30,13 +30,17 @@ class DepartementService:
         return self.dao.update(id_departement, nom, telephone, budget_total)
 
     def consommer_budget(self, id_departement, montant):
-        dep = self.get_by_id(id_departement)
-        if montant <= 0:
-            raise ValueError("Le montant doit être positif")
-        if dep.budget_restant < montant:
-            raise ValueError(f"Budget insuffisant (restant: {dep.budget_restant}€)")
-        return self.dao.update_budget_utilise(id_departement, montant)
-
+            dep = self.get_by_id(id_departement)
+            if montant <= 0:
+                raise ValueError("Le montant doit être positif")
+            
+            budget_restant = dep.budget_total - dep.budget_utilise
+            
+            if budget_restant < montant:
+                raise ValueError(f"Budget insuffisant (restant: {budget_restant}€)")
+                
+            return self.dao.update_budget_utilise(id_departement, montant)
+    
     def delete(self, id_departement):
         self.get_by_id(id_departement)  # vérifie existence
         return self.dao.delete(id_departement)

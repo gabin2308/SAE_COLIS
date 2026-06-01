@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.StatutColisService import StatutColisService
 from app.controller.PermissionsController import login_required, reqrole
+import logging
 
 class StatutColisController:
 
@@ -28,9 +29,11 @@ class StatutColisController:
             return jsonify(statut.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération du statut {id_statut}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def create(self):
         data = request.get_json(force=True, silent=True) or {}
@@ -44,9 +47,11 @@ class StatutColisController:
             return jsonify(statut.to_dict()), 201
         except ValueError as e:
             return jsonify({"error": str(e)}), 409
+        except Exception as e:
+            logging.error(f"Erreur lors de la création du statut: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
-    @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("10 per minute")
     def delete(self, id_statut):
         try:
@@ -54,5 +59,8 @@ class StatutColisController:
             return jsonify({"message": "Statut supprimé"}), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la suppression du statut {id_statut}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
 ctrl = StatutColisController()

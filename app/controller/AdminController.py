@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.UtilisateurService import UtilisateurService
-from app.controller.UtilisateurController import login_required, reqrole
+from app.controller.PermissionsController import login_required, reqrole
+from flask_jwt_extended import get_jwt_identity
+import logging
 
 class AdminUserController:
 
@@ -20,13 +22,13 @@ class AdminUserController:
         self.blueprint.add_url_rule('/<int:id_utilisateur>', view_func=self.delete, methods=['DELETE'])
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     def getAll(self):
         users = self.us.get_all_users()
         return jsonify([u.to_dict() for u in users]), 200
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     def getById(self, id_utilisateur):
         user = self.us.get_user_by_id(id_utilisateur)
         if not user:
@@ -34,7 +36,7 @@ class AdminUserController:
         return jsonify(user.to_dict()), 200
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     def search(self):
         query = request.args.get('q', '').strip()
         if not query:
@@ -43,7 +45,7 @@ class AdminUserController:
         return jsonify([u.to_dict() for u in users]), 200
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def create(self):
         data = request.get_json(force=True, silent=True) or {}
@@ -62,14 +64,14 @@ class AdminUserController:
         except ValueError as e:
             return jsonify({"error": str(e)}), 409
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logging.error(f"Erreur création utilisateur: {e}")
+            return jsonify({"error": "Erreur interne du serveur"}), 500
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("30 per minute")
     def update(self, id_utilisateur):
         data = request.get_json(force=True, silent=True) or {}
-
         try:
             user = self.us.update_user(
                 id_utilisateur,
@@ -82,10 +84,11 @@ class AdminUserController:
                 return jsonify({"error": "Utilisateur introuvable"}), 404
             return jsonify(user.to_dict()), 200
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logging.error(f"Erreur mise à jour utilisateur: {e}")
+            return jsonify({"error": "Erreur interne du serveur"}), 500
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("10 per minute")
     def updatePassword(self, id_utilisateur):
         data = request.get_json(force=True, silent=True) or {}
@@ -100,14 +103,20 @@ class AdminUserController:
                 return jsonify({"error": "Utilisateur introuvable"}), 404
             return jsonify({"message": "Mot de passe mis à jour"}), 200
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logging.error(f"Erreur changement mot de passe: {e}")
+            return jsonify({"error": "Erreur interne du serveur"}), 500
 
     @login_required
-    @reqrole('admin')
+    @reqrole('administrateur')
     @limiter.limit("10 per minute")
     def delete(self, id_utilisateur):
-        # Empêche l'admin de se supprimer lui-même
-        if session.get('user_id') == id_utilisateur:
+        # Conversion explicite en int pour comparer avec l'ID du JWT
+        try:
+            current_user_id = int(get_jwt_identity())
+        except (ValueError, TypeError):
+            return jsonify({"error": "Identité invalide"}), 401
+
+        if current_user_id == id_utilisateur:
             return jsonify({"error": "Impossible de supprimer votre propre compte"}), 403
 
         try:
@@ -116,6 +125,7 @@ class AdminUserController:
                 return jsonify({"error": "Utilisateur introuvable"}), 404
             return jsonify({"message": "Utilisateur supprimé"}), 200
         except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            logging.error(f"Erreur suppression utilisateur: {e}")
+            return jsonify({"error": "Erreur interne du serveur"}), 500
 
 ctrl = AdminUserController()

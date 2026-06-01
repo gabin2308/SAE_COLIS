@@ -15,15 +15,28 @@ export default function Login() {
   const navigate  = useNavigate()
 
 
-  const handleLogin = async () => {
-    setError(null)
-    if (!email || !password) { setError("Remplis tous les champs"); return }
-    setLoading(true)
-    const data = await authService.login(email, password)
-    setLoading(false)
-    if (data.success) { login(data.user); navigate("/dashboard") }
-    else setError(data.error || "Erreur inconnue")
+const handleLogin = async (e) => {
+  if (e) e.preventDefault()
+  setError(null)
+  
+  if (!email || !password) { 
+    setError("Veuillez remplir tous les champs")
+    return 
   }
+  
+  setLoading(true)
+  
+  // On appelle la fonction login du contexte qui s'occupe de l'API et de setUser
+  const result = await login(email, password)
+  
+  setLoading(false)
+  
+  if (result.success) {
+    navigate("/dashboard") // Redirection après succès
+  } else {
+    setError(result.error || "Identifiants invalides")
+  }
+}
 
   return (
     <div style={styles.page}>
@@ -58,7 +71,7 @@ export default function Login() {
               placeholder="prenom.nom@iutv.univ-paris13.fr"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              onKeyDown={e => e.key === "Enter" && handleLogin(e)}
               style={styles.input}
             />
           </div>

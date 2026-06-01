@@ -3,7 +3,7 @@ from flask_jwt_extended import get_jwt_identity
 from app import limiter
 from app.service.EvenementColisService import EvenementColisService
 from app.controller.PermissionsController import login_required, reqrole
-
+import logging
 
 class EvenementColisController:
 
@@ -13,12 +13,12 @@ class EvenementColisController:
         self._register_routes()
 
     def _register_routes(self):
-        self.blueprint.add_url_rule('/colis/<int:colis_id>',          view_func=self.getByColis,          methods=['GET'])
-        self.blueprint.add_url_rule('/colis/<int:colis_id>/dernier',   view_func=self.getDernierEvenement, methods=['GET'])
-        self.blueprint.add_url_rule('/<int:id_evenement>',             view_func=self.getById,             methods=['GET'])
-        self.blueprint.add_url_rule('/action/<string:action>',         view_func=self.getByAction,         methods=['GET'])
-        self.blueprint.add_url_rule('/',                               view_func=self.create,              methods=['POST'])
-        self.blueprint.add_url_rule('/<int:id_evenement>',             view_func=self.delete,              methods=['DELETE'])
+        self.blueprint.add_url_rule('/colis/<int:colis_id>', view_func=self.getByColis, methods=['GET'])
+        self.blueprint.add_url_rule('/colis/<int:colis_id>/dernier', view_func=self.getDernierEvenement, methods=['GET'])
+        self.blueprint.add_url_rule('/<int:id_evenement>', view_func=self.getById, methods=['GET'])
+        self.blueprint.add_url_rule('/action/<string:action>', view_func=self.getByAction, methods=['GET'])
+        self.blueprint.add_url_rule('/', view_func=self.create, methods=['POST'])
+        self.blueprint.add_url_rule('/<int:id_evenement>', view_func=self.delete, methods=['DELETE'])
 
     @login_required
     def getByColis(self, colis_id):
@@ -39,6 +39,9 @@ class EvenementColisController:
             return jsonify(ev.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération de l'événement {id_evenement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'agent_postal_iut', 'agent_postal_universite')
     def getByAction(self, action):
@@ -54,8 +57,10 @@ class EvenementColisController:
         data = request.get_json(force=True, silent=True) or {}
         colis_id = data.get('colis_id')
         action = data.get('action')
+        
         if not colis_id or not action:
             return jsonify({"error": "colis_id et action sont requis"}), 400
+            
         try:
             ev = self.ecs.create(
                 colis_id=colis_id,
@@ -70,8 +75,9 @@ class EvenementColisController:
                 date_estimee_arrivee=data.get('date_estimee_arrivee')
             )
             return jsonify(ev.to_dict()), 201
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            logging.error(f"Erreur lors de la création de l'événement: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur')
     @limiter.limit("10 per minute")
@@ -81,6 +87,8 @@ class EvenementColisController:
             return jsonify({"message": "Événement supprimé"}), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
-
+        except Exception as e:
+            logging.error(f"Erreur lors de la suppression de l'événement {id_evenement}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
 ctrl = EvenementColisController()

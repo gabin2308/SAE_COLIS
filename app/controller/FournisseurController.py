@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import limiter
 from app.service.FournisseurService import FournisseurService
 from app.controller.PermissionsController import login_required, reqrole
-
+import logging
 
 class FournisseurController:
 
@@ -12,14 +12,14 @@ class FournisseurController:
         self._register_routes()
 
     def _register_routes(self):
-        self.blueprint.add_url_rule('/',                                    view_func=self.getAll,      methods=['GET'])
-        self.blueprint.add_url_rule('/search',                              view_func=self.search,      methods=['GET'])
-        self.blueprint.add_url_rule('/<int:id_fournisseur>',                view_func=self.getById,     methods=['GET'])
-        self.blueprint.add_url_rule('/',                                    view_func=self.create,      methods=['POST'])
-        self.blueprint.add_url_rule('/<int:id_fournisseur>',                view_func=self.update,      methods=['PUT'])
-        self.blueprint.add_url_rule('/<int:id_fournisseur>/desactiver',     view_func=self.desactiver,  methods=['PATCH'])
-        self.blueprint.add_url_rule('/<int:id_fournisseur>/reactiver',      view_func=self.reactiver,   methods=['PATCH'])
-        self.blueprint.add_url_rule('/<int:id_fournisseur>',                view_func=self.delete,      methods=['DELETE'])
+        self.blueprint.add_url_rule('/', view_func=self.getAll, methods=['GET'])
+        self.blueprint.add_url_rule('/search', view_func=self.search, methods=['GET'])
+        self.blueprint.add_url_rule('/<int:id_fournisseur>', view_func=self.getById, methods=['GET'])
+        self.blueprint.add_url_rule('/', view_func=self.create, methods=['POST'])
+        self.blueprint.add_url_rule('/<int:id_fournisseur>', view_func=self.update, methods=['PUT'])
+        self.blueprint.add_url_rule('/<int:id_fournisseur>/desactiver', view_func=self.desactiver, methods=['PATCH'])
+        self.blueprint.add_url_rule('/<int:id_fournisseur>/reactiver', view_func=self.reactiver, methods=['PATCH'])
+        self.blueprint.add_url_rule('/<int:id_fournisseur>', view_func=self.delete, methods=['DELETE'])
 
     @login_required
     def getAll(self):
@@ -41,6 +41,9 @@ class FournisseurController:
             return jsonify(f.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur lors de la récupération du fournisseur {id_fournisseur}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier')
     @limiter.limit("30 per minute")
@@ -61,8 +64,9 @@ class FournisseurController:
                 conditions_paiement=data.get('conditions_paiement')
             )
             return jsonify(f.to_dict()), 201
-        except ValueError as e:
-            return jsonify({"error": str(e)}), 409
+        except Exception as e:
+            logging.error(f"Erreur lors de la création du fournisseur: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier')
     @limiter.limit("30 per minute")
@@ -82,6 +86,9 @@ class FournisseurController:
             return jsonify(f.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur mise à jour fournisseur {id_fournisseur}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur', 'responsable_financier')
     @limiter.limit("30 per minute")
@@ -91,6 +98,9 @@ class FournisseurController:
             return jsonify(f.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur désactivation fournisseur {id_fournisseur}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur')
     @limiter.limit("30 per minute")
@@ -100,6 +110,9 @@ class FournisseurController:
             return jsonify(f.to_dict()), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logging.error(f"Erreur réactivation fournisseur {id_fournisseur}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
     @reqrole('administrateur')
     @limiter.limit("10 per minute")
@@ -109,6 +122,8 @@ class FournisseurController:
             return jsonify({"message": "Fournisseur supprimé"}), 200
         except ValueError as e:
             return jsonify({"error": str(e)}), 404
-
+        except Exception as e:
+            logging.error(f"Erreur suppression fournisseur {id_fournisseur}: {e}")
+            return jsonify({"error": "Erreur serveur interne"}), 500
 
 ctrl = FournisseurController()
