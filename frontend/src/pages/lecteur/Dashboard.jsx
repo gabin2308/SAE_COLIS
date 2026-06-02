@@ -1,306 +1,52 @@
-// // import { useState, useEffect } from "react"
-// // import { useNavigate } from "react-router-dom"
-// // import { useAuth } from "../../context/AuthContext"
-// // import { useNotification } from "../../context/NotificationContext"
-// // import { colisService } from "../../services/colisService"
-// // import { demandeService } from "../../services/demandeService"
-// // import Header from '../../components/ui/Header'
-// // import WelcomeRow from "../../components/ui/WelcomeRow"
-// // import Card from "../../components/ui/Card"
-// // import StatusBadge from "../../components/ui/StatusBadge"
-
-// // export default function Dashboard() {
-// //   const { user } = useAuth()
-// //   const { unreadCount } = useNotification() // Compteur pour le badge
-// //   const navigate = useNavigate()
-
-// //   const [allColis, setAllColis] = useState([])
-// //   const [filteredColis, setFilteredColis] = useState([])
-// //   const [demandes, setDemandes] = useState([])
-// //   const [searchSuivi, setSearchSuivi] = useState("")
-// //   const [loading, setLoading] = useState(true)
-
-// //   const loadData = async () => {
-// //     setLoading(true)
-// //     try {
-// //       const isAgent = ["administrateur", "postal_iut", "postal_univ"].includes(user?.role)
-// //       const [colisData, demandesData] = await Promise.all([
-// //         isAgent ? colisService.getAll() : colisService.getMesColis(),
-// //         user?.role === "administrateur" ? demandeService.getAll() : demandeService.getMesDemandes()
-// //       ])
-
-// //       setAllColis(colisData || [])
-// //       setFilteredColis((colisData || []).slice(0, 5))
-// //       setDemandes(demandesData || [])
-// //     } catch (err) {
-// //       console.error("Erreur chargement dashboard", err)
-// //     } finally {
-// //       setLoading(false)
-// //     }
-// //   }
-
-// //   useEffect(() => { loadData() }, [user])
-
-// //   const handleSearchChange = (e) => {
-// //     const value = e.target.value
-// //     setSearchSuivi(value)
-// //     if (!value) {
-// //       setFilteredColis(allColis.slice(0, 5))
-// //     } else {
-// //       const filtered = allColis.filter(c => 
-// //         c.numero_suivi?.toLowerCase().includes(value.toLowerCase())
-// //       )
-// //       setFilteredColis(filtered.slice(0, 5))
-// //     }
-// //   }
-
-// //   return (
-// //     <div className="min-h-screen bg-[#f7f9fc] font-sans text-[#0d2a4a]">
-// //       {/* Passage du compteur unreadCount au Header */}
-// //       <Header notifCount={unreadCount} />
-
-// //       <main className="max-w-7xl mx-auto p-4 md:p-8">
-// //         <WelcomeRow 
-// //           prenom={user?.prenom} 
-// //           onScanClick={() => navigate("/scan")} 
-// //           onNewDemandeClick={() => navigate("/demandes/nouvelle")}
-// //         />
-
-// //         {/* Barre de recherche et bouton refresh */}
-// //         <div className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100 mb-8">
-// //           <input 
-// //             type="text" 
-// //             placeholder="Recherche rapide par numéro de suivi..." 
-// //             value={searchSuivi}
-// //             onChange={handleSearchChange}
-// //             className="flex-1 border-none outline-none px-3 py-2 text-sm text-[#0d2a4a] placeholder-slate-400"
-// //           />
-// //           <button 
-// //             onClick={loadData}
-// //             className="bg-[#0d4f8a] hover:bg-[#0a3f6e] text-white px-4 md:px-6 rounded-lg text-sm font-semibold transition-colors"
-// //           >
-// //             🔄
-// //           </button>
-// //         </div>
-
-// //         {loading ? (
-// //           <div className="text-center text-slate-500 py-12">Chargement...</div>
-// //         ) : (
-// //           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-// //             <Card title="📦 Colis récents" actionText="Voir tout" onActionClick={() => navigate("/colis")}>
-// //               {filteredColis.length === 0 ? (
-// //                 <p className="text-sm text-slate-400 text-center py-8">Aucun colis trouvé.</p>
-// //               ) : (
-// //                 <div className="space-y-3">
-// //                   {filteredColis.map((c) => (
-// //                     <div key={c.id_colis || c.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-// //                       <div>
-// //                         <div className="text-sm font-semibold">{c.numero_suivi}</div>
-// //                         <div className="text-xs text-slate-400">BC: #{c.bon_commande_id}</div>
-// //                       </div>
-// //                       <StatusBadge status={c.statut_libelle} />
-// //                     </div>
-// //                   ))}
-// //                 </div>
-// //               )}
-// //             </Card>
-
-// //             <Card title="📄 Demandes d'Achat" actionText="Voir tout" onActionClick={() => navigate("/demande")}>
-// //               {demandes.length === 0 ? (
-// //                 <p className="text-sm text-slate-400 text-center py-8">Aucune demande.</p>
-// //               ) : (
-// //                 <div className="space-y-3">
-// //                   {demandes.slice(0, 5).map((d) => (
-// //                     <div key={d.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-// //                       <div className="truncate max-w-[60%]">
-// //                         <div className="text-sm font-semibold truncate">{d.description}</div>
-// //                         <div className="text-xs text-slate-400">
-// //                           {new Date(d.date_creation).toLocaleDateString("fr-FR")}
-// //                         </div>
-// //                       </div>
-// //                       <StatusBadge status={d.statut} />
-// //                     </div>
-// //                   ))}
-// //                 </div>
-// //               )}
-// //             </Card>
-// //           </div>
-// //         )}
-// //       </main>
-// //     </div>
-// //   )
-// // }
-// import { useState, useEffect } from "react"
-// import { useNavigate } from "react-router-dom"
-// import { useAuth } from "../../context/AuthContext"
-// import { colisService } from "../../services/colisService"
-// import { demandeService } from "../../services/demandeService"
-// import Header from '../../components/ui/Header'
-// import WelcomeRow from "../../components/ui/WelcomeRow"
-// import Card from "../../components/ui/Card"
-// import StatusBadge from "../../components/ui/StatusBadge"
-
-// export default function Dashboard() {
-//   const { user } = useAuth()
-//   const navigate = useNavigate()
-
-//   const [allColis, setAllColis] = useState([])
-//   const [filteredColis, setFilteredColis] = useState([])
-//   const [demandes, setDemandes] = useState([])
-//   const [searchSuivi, setSearchSuivi] = useState("")
-//   const [loading, setLoading] = useState(true)
-
-//   const loadData = async () => {
-//     setLoading(true)
-//     try {
-//       const isAgent = ["administrateur", "postal_iut", "postal_univ"].includes(user?.role)
-//       const [colisData, demandesData] = await Promise.all([
-//         isAgent ? colisService.getAll() : colisService.getMesColis(),
-//         user?.role === "administrateur" ? demandeService.getAll() : demandeService.getMesDemandes()
-//       ])
-
-//       setAllColis(colisData || [])
-//       setFilteredColis((colisData || []).slice(0, 5))
-//       setDemandes(demandesData || [])
-//     } catch (err) {
-//       console.error("Erreur chargement dashboard", err)
-//     } finally {
-//       setLoading(false)
-//     }
-//   }
-
-//   useEffect(() => { loadData() }, [user])
-
-//   const handleSearchChange = (e) => {
-//     const value = e.target.value
-//     setSearchSuivi(value)
-//     if (!value) {
-//       setFilteredColis(allColis.slice(0, 5))
-//     } else {
-//       const filtered = allColis.filter(c => 
-//         c.numero_suivi?.toLowerCase().includes(value.toLowerCase())
-//       )
-//       setFilteredColis(filtered.slice(0, 5))
-//     }
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-[#f7f9fc] font-sans text-[#0d2a4a]">
-//       {/* Header sans props de notification */}
-//       <Header />
-
-//       <main className="max-w-7xl mx-auto p-4 md:p-8">
-//         <WelcomeRow 
-//           prenom={user?.prenom} 
-//           onScanClick={() => navigate("/scan")} 
-//           onNewDemandeClick={() => navigate("/demandes/nouvelle")}
-//         />
-
-//         <div className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100 mb-8">
-//           <input 
-//             type="text" 
-//             placeholder="Recherche rapide par numéro de suivi..." 
-//             value={searchSuivi}
-//             onChange={handleSearchChange}
-//             className="flex-1 border-none outline-none px-3 py-2 text-sm text-[#0d2a4a] placeholder-slate-400"
-//           />
-//           <button 
-//             onClick={loadData}
-//             className="bg-[#0d4f8a] hover:bg-[#0a3f6e] text-white px-4 md:px-6 rounded-lg text-sm font-semibold transition-colors"
-//           >
-//             🔄
-//           </button>
-//         </div>
-
-//         {loading ? (
-//           <div className="text-center text-slate-500 py-12">Chargement...</div>
-//         ) : (
-//           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-//             <Card title="📦 Colis récents" actionText="Voir tout" onActionClick={() => navigate("/colis")}>
-//               {filteredColis.length === 0 ? (
-//                 <p className="text-sm text-slate-400 text-center py-8">Aucun colis trouvé.</p>
-//               ) : (
-//                 <div className="space-y-3">
-//                   {filteredColis.map((c) => (
-//                     <div key={`colis-${c.id_colis || c.id}`} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-//                       <div>
-//                         <div className="text-sm font-semibold">{c.numero_suivi}</div>
-//                         <div className="text-xs text-slate-400">BC: #{c.bon_commande_id}</div>
-//                       </div>
-//                       <StatusBadge status={c.statut_libelle} />
-//                     </div>
-//                   ))}
-//                 </div>
-//               )}
-//             </Card>
-
-//             <Card title="📄 Demandes d'Achat" actionText="Voir tout" onActionClick={() => navigate("/demande")}>
-//               {demandes.length === 0 ? (
-//                 <p className="text-sm text-slate-400 text-center py-8">Aucune demande.</p>
-//               ) : (
-//                 <div className="space-y-3">
-//                   {demandes.slice(0, 5).map((d) => (
-//                     <div key={`demande-${d.id}`} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-//                       <div className="truncate max-w-[60%]">
-//                         <div className="text-sm font-semibold truncate">{d.description}</div>
-//                         <div className="text-xs text-slate-400">
-//                           {new Date(d.date_creation).toLocaleDateString("fr-FR")}
-//                         </div>
-//                       </div>
-//                       <StatusBadge status={d.statut} />
-//                     </div>
-//                   ))}
-//                 </div>
-//               )}
-//             </Card>
-//           </div>
-//         )}
-//       </main>
-//     </div>
-//   )
-// }
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { colisService } from "../../services/colisService"
 import { demandeService } from "../../services/demandeService"
 import { devisService } from "../../services/devisService"
-import Header from '../../components/ui/Header'
+import { notificationService } from "../../services/notificationService"
+import { bonCommandeService } from "../../services/bonCommandeService"
+import { userService } from "../../services/UtilisateurService"
+import Header from "../../components/ui/Header"
 import WelcomeRow from "../../components/ui/WelcomeRow"
-import Card from "../../components/ui/Card"
 import StatusBadge from "../../components/ui/StatusBadge"
+import { DashCard, Empty } from "../../components/ui/DashCard"
+import { Search, RefreshCw, Loader2, Bell, Package, FileText, ShoppingCart, Receipt, Users } from "lucide-react"
 
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  // États pour les données
   const [allColis, setAllColis] = useState([])
-  const [filteredColis, setFilteredColis] = useState([])
   const [demandes, setDemandes] = useState([])
   const [devis, setDevis] = useState([])
-  const [searchSuivi, setSearchSuivi] = useState("")
+  const [notifications, setNotifications] = useState([])
+  const [bonCommandes, setBonCommandes] = useState([])
+  const [users, setUsers] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
 
-  // Définition des droits basée sur le rôle utilisateur
   const isAgent = ["administrateur", "postal_iut", "postal_univ"].includes(user?.role)
   const isFinancier = ["administrateur", "responsable_financier", "directeur"].includes(user?.role)
+  const isAdmin = user?.role === "administrateur"
 
   const loadData = async () => {
     setLoading(true)
     try {
-      const [colisData, demandesData, devisData] = await Promise.all([
+      const [colisData, demandesData, devisData, notifsData, bcData, usersData] = await Promise.all([
         isAgent ? colisService.getAll() : colisService.getMesColis(),
-        user?.role === "administrateur" ? demandeService.getAll() : demandeService.getMesDemandes(),
-        isFinancier ? devisService.getAll() : Promise.resolve([])
+        isAdmin ? demandeService.getAll() : demandeService.getMesDemandes(),
+        isFinancier ? devisService.getAll() : Promise.resolve([]),
+        notificationService.getNonLues(),
+        bonCommandeService.getAll(),
+        isAdmin ? userService.getAll() : Promise.resolve([])
       ])
-
       setAllColis(colisData || [])
-      setFilteredColis((colisData || []).slice(0, 5))
       setDemandes(demandesData || [])
       setDevis(devisData || [])
+      setNotifications(notifsData || [])
+      setBonCommandes(bcData || [])
+      setUsers(usersData || [])
     } catch (err) {
       console.error("Erreur chargement dashboard", err)
     } finally {
@@ -308,115 +54,100 @@ export default function Dashboard() {
     }
   }
 
-  useEffect(() => { 
-    if (user) loadData() 
-  }, [user])
+  useEffect(() => { if (user) loadData() }, [user])
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value
-    setSearchSuivi(value)
-    if (!value) {
-      setFilteredColis(allColis.slice(0, 5))
-    } else {
-      const filtered = allColis.filter(c => 
-        c.numero_suivi?.toLowerCase().includes(value.toLowerCase())
-      )
-      setFilteredColis(filtered.slice(0, 5))
-    }
-  }
+  const filteredColis = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase()
+    if (!q) return allColis
+    return allColis.filter(c =>
+      c.numero_suivi?.toLowerCase().includes(q) ||
+      c.numero_commande?.toLowerCase().includes(q) ||
+      c.destinataire_nom?.toLowerCase().includes(q)
+    )
+  }, [allColis, searchTerm])
+
+  const stats = useMemo(() => [
+    { label: "Colis", value: allColis.length, color: "text-blue-700", bg: "bg-blue-50", path: "/colis" },
+    { label: "Demandes", value: demandes.length, color: "text-violet-700", bg: "bg-violet-50", path: "/demandes" },
+    { label: "Bons commande", value: bonCommandes.length, color: "text-amber-700", bg: "bg-amber-50", path: "/bon-commande" },
+    ...(isFinancier ? [{ label: "Devis", value: devis.length, color: "text-teal-700", bg: "bg-teal-50", path: "/devis" }] : []),
+  ], [allColis, demandes, bonCommandes, devis, isFinancier])
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] font-sans text-[#0d2a4a]">
+    <div className="min-h-screen bg-[#f7f9fc]">
       <Header />
-
-      <main className="max-w-7xl mx-auto p-4 md:p-8">
-        <WelcomeRow 
-          prenom={user?.prenom} 
-          onScanClick={() => navigate("/scan")} 
-          onNewDemandeClick={() => navigate("/demandes/nouvelle")}
-        />
-
-        <div className="flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100 mb-8">
-          <input 
-            type="text" 
-            placeholder="Recherche rapide par numéro de suivi..." 
-            value={searchSuivi}
-            onChange={handleSearchChange}
-            className="flex-1 border-none outline-none px-3 py-2 text-sm text-[#0d2a4a] placeholder-slate-400"
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <WelcomeRow
+            prenom={user?.prenom}
+            onScanClick={() => navigate("/scan")}
+            onNewDemandeClick={() => navigate("/demandes/nouvelle")}
           />
-          <button 
+        </div>
+
+        <div className="flex gap-3 items-center bg-white px-4 py-3 rounded-2xl border border-slate-200 mb-8">
+          <Search size={16} className="text-slate-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Rechercher par numéro de suivi, commande, destinataire..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="flex-1 text-sm outline-none text-slate-700 placeholder:text-slate-400"
+          />
+          <button
             onClick={loadData}
-            className="bg-[#0d4f8a] hover:bg-[#0a3f6e] text-white px-4 md:px-6 rounded-lg text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 bg-[#0d4f8a] text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-[#0a3d6b] transition-colors shrink-0"
           >
-            🔄
+            <RefreshCw size={14} />
+            Actualiser
           </button>
         </div>
 
         {loading ? (
-          <div className="text-center text-slate-500 py-12">Chargement des données...</div>
+          <div className="flex justify-center py-24">
+            <Loader2 className="animate-spin text-[#0d4f8a]" size={36} />
+          </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Colonne Colis */}
-            <Card title="📦 Colis récents" actionText="Voir tout" onActionClick={() => navigate("/colis")}>
-              {filteredColis.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">Aucun colis trouvé.</p>
-              ) : (
-                <div className="space-y-3">
-                  {filteredColis.map((c) => (
-                    <div key={c.id_colis || c.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div>
-                        <div className="text-sm font-semibold">{c.numero_suivi}</div>
-                        <div className="text-xs text-slate-400">BC: #{c.bon_commande_id}</div>
-                      </div>
-                      <StatusBadge status={c.statut_libelle} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Colonne Demandes */}
-            <Card title="📄 Demandes d'Achat" actionText="Voir tout" onActionClick={() => navigate("/demande")}>
-              {demandes.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-8">Aucune demande.</p>
-              ) : (
-                <div className="space-y-3">
-                  {demandes.slice(0, 5).map((d) => (
-                    <div key={d.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="truncate max-w-[60%]">
-                        <div className="text-sm font-semibold truncate">{d.description}</div>
-                        <div className="text-xs text-slate-400">{new Date(d.date_creation).toLocaleDateString("fr-FR")}</div>
-                      </div>
-                      <StatusBadge status={d.statut} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Colonne Devis (Conditionnée par le rôle financier) */}
-            {isFinancier && (
-              <Card title="📝 Devis récents" actionText="Voir tout" onActionClick={() => navigate("/devis")}>
-                {devis.length === 0 ? (
-                  <p className="text-sm text-slate-400 text-center py-8">Aucun devis.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {devis.slice(0, 5).map((d) => (
-                      <div key={d.id_devis} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <div className="truncate max-w-[60%]">
-                          <div className="text-sm font-semibold truncate">{d.objet || "Sans objet"}</div>
-                          <div className="text-xs text-slate-400">{d.montant_estime ? `${d.montant_estime}€` : "N/A"}</div>
-                        </div>
-                        <StatusBadge status={d.statut} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
-            )}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {stats.map(s => (
+              <button key={s.label} onClick={() => navigate(s.path)} className={`${s.bg} rounded-2xl border border-slate-200 p-4 text-left hover:shadow-sm transition-shadow`}>
+                <p className="text-xs text-slate-500 mb-1">{s.label}</p>
+                <p className={`text-3xl font-bold ${s.color}`}>{s.value}</p>
+              </button>
+            ))}
           </div>
         )}
+
+        {!loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Notifications */}
+          <DashCard icon={<Bell size={16} />} title="Notifications" count={notifications.length} onAction={() => navigate("/notifications")} accentClass="text-blue-600 bg-blue-50">
+            {notifications.length === 0 ? <Empty text="Aucune nouvelle notification." /> : <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-sm"><p className="text-[#0d2a4a] font-medium truncate">{notifications[0].message}</p></div>}
+          </DashCard>
+
+          {/* Colis */}
+          <DashCard icon={<Package size={16} />} title="Colis récents" count={filteredColis.length} onAction={() => navigate("/colis")} accentClass="text-indigo-600 bg-indigo-50">
+            {filteredColis.length === 0 ? <Empty text="Aucun colis." /> : <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="font-bold text-[#0d2a4a] text-sm truncate">{filteredColis[0].numero_suivi}</p><StatusBadge status={filteredColis[0].statut_libelle} /></div>}
+          </DashCard>
+
+          {/* Demandes */}
+          <DashCard icon={<FileText size={16} />} title="Demandes d'achat" count={demandes.length} onAction={() => navigate("/demandes")} accentClass="text-violet-600 bg-violet-50">
+            {demandes.length === 0 ? <Empty text="Aucune demande." /> : <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="text-sm font-semibold truncate text-[#0d2a4a]">{demandes[0].objet}</p></div>}
+          </DashCard>
+
+          {/* Bons de commande */}
+          <DashCard icon={<ShoppingCart size={16} />} title="Bons de commande" count={bonCommandes.length} onAction={() => navigate("/bon-commande")} accentClass="text-amber-600 bg-amber-50">
+            {bonCommandes.length === 0 ? <Empty text="Aucun bon de commande." /> : <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="font-bold text-[#0d2a4a] text-sm truncate">{bonCommandes[0].numero_commande}</p><StatusBadge status={bonCommandes[0].statut_libelle} /></div>}
+          </DashCard>
+
+          {/* Utilisateurs (Admin uniquement) */}
+          {isAdmin && (
+            <DashCard icon={<Users size={16} />} title="Utilisateurs" count={users.length} onAction={() => navigate("/utilisateurs")} accentClass="text-emerald-600 bg-emerald-50">
+              {users.length === 0 ? <Empty text="Aucun utilisateur." /> : <div className="p-3 bg-slate-50 rounded-xl border border-slate-100"><p className="font-bold text-[#0d2a4a] text-sm">{users[0].full_name}</p></div>}
+            </DashCard>
+          )}
+        </div>
+      )}
       </main>
     </div>
   )

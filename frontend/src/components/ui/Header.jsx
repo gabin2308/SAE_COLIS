@@ -29,7 +29,7 @@ export default function Header({ notifCount = 0 }) {
       {/* Actions à droite */}
       <div className="flex items-center gap-4">
         {/* Notifications */}
-        <div className="relative cursor-pointer p-1" onClick={() => navigate("/notification")}>
+        <div className="relative cursor-pointer p-1" onClick={() => navigate("/notifications")}>
           <span className="text-xl">🔔</span>
           {notifCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">

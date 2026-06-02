@@ -59,4 +59,21 @@ export const devisService = {
       method: "DELETE",
     });
   },
+
+  telechargerPdf: async (id_devis) => {
+    // On appelle apiFetch avec le 3ème argument 'true' pour le blob
+    const blob = await apiFetch(`${BASE}/${id_devis}/pdf`, { method: 'GET' }, true);
+    
+    // Création du lien de téléchargement
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `devis_${id_devis}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Nettoyage
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  }
 };

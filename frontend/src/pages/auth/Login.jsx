@@ -3,32 +3,30 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import logoIut from "../../assets/logo-iutv.png"
 import logoSorb from "../../assets/sorbonne.png"
-// Constantes pour les logos (utilisez vos chaînes base64 ici)
-// 1. Définissez vos constantes en haut de votre fichier
-// 1. Définissez vos constantes en haut de votre fichier
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react"
 
 export default function Login() {
-  const [email, setEmail] = useState("")
+  const [email, setEmail]       = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
-  
+  const [showPwd, setShowPwd]   = useState(false)
+  const [error, setError]       = useState(null)
+  const [loading, setLoading]   = useState(false)
+
   const navigate = useNavigate()
   const { login } = useAuth()
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault()
     setError(null)
-    
-    if (!email || !password) { 
+
+    if (!email || !password) {
       setError("Veuillez remplir tous les champs")
-      return 
+      return
     }
-    
+
     setLoading(true)
-    
     const result = await login(email, password)
-    
+
     if (result.success) {
       navigate("/dashboard")
     } else {
@@ -38,86 +36,138 @@ export default function Login() {
   }
 
   return (
-    <div style={styles.page}>
-      {/* Partie gauche */}
-      <div style={styles.left}>
-        <div style={styles.overlay} />
-        <div style={styles.leftContent}>
-          <p style={styles.tagline}>Système de gestion<br />des colis et commandes</p>
+    <div className="flex min-h-screen font-sans">
+
+      {/* ── Partie gauche ── */}
+      <div className="hidden lg:flex flex-1 relative items-end p-12"
+        style={{ background: "linear-gradient(160deg, #0d6ebd 0%, #1a9fd4 50%, #0a4f8a 100%)" }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0" style={{ background: "rgba(5,40,80,0.38)" }} />
+
+        {/* Motif décoratif */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, white, transparent)" }} />
+          <div className="absolute top-1/3 -left-16 w-64 h-64 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, white, transparent)" }} />
+          <div className="absolute bottom-32 right-24 w-48 h-48 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, white, transparent)" }} />
+        </div>
+
+        {/* Texte bas gauche */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="w-8 h-0.5 bg-white/60" />
+            <span className="text-white/60 text-xs font-medium uppercase tracking-widest">SAE Colis</span>
+          </div>
+          <h2 className="text-white text-3xl font-light leading-snug mb-4">
+            Système de gestion<br />
+            <span className="font-bold">des colis et commandes</span>
+          </h2>
+          <p className="text-white/60 text-sm max-w-xs leading-relaxed">
+            Plateforme de suivi des colis, demandes d'achat et bons de commande de l'IUT de Villetaneuse.
+          </p>
+
+          {/* Indicateurs feature */}
+          <div className="flex gap-4 mt-8">
+            {["Suivi colis", "Bons commande", "Devis"].map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
+                <span className="text-white/70 text-xs">{f}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Partie droite (Formulaire) */}
-      <div style={styles.right}>
-        <div style={styles.card}>
-          <div style={styles.logos}>
-            <img src={logoIut} alt="IUT" style={styles.logoIut} />
-            <div style={styles.logoDivider} />
-            <img src={logoSorb} alt="Sorbonne" style={styles.logoSorb} />
+      {/* ── Partie droite ── */}
+      <div className="w-full lg:w-[480px] flex items-center justify-center bg-[#f7f9fc] px-6 py-10">
+        <div className="w-full max-w-sm">
+
+          {/* Logos */}
+          <div className="flex items-center gap-4 mb-10">
+            <img src={logoIut}  alt="IUT Villetaneuse" className="h-12 object-contain" />
+            <div className="w-px h-10 bg-slate-200" />
+            <img src={logoSorb} alt="Sorbonne Paris Nord" className="h-16 object-contain" />
           </div>
 
-          <h1 style={styles.title}>Connexion</h1>
-          <p style={styles.subtitle}>Espace personnel IUT Villetaneuse</p>
+          {/* Titre */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-[#0d2a4a] mb-1">Connexion</h1>
+            <p className="text-sm text-slate-500">Espace personnel IUT Villetaneuse</p>
+          </div>
 
+          {/* Erreur */}
           {error && (
-            <div style={styles.errorBox}>
-              <span style={{ fontSize: 16, marginRight: 8 }}>⚠</span>{error}
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-6">
+              <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
-          <div style={styles.field}>
-            <label style={styles.label}>Adresse email</label>
-            <input
-              type="email"
-              placeholder="prenom.nom@iutv.univ-paris13.fr"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={styles.input}
-            />
+          {/* Formulaire */}
+          <div className="space-y-5">
+
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-[#3d4f6e] mb-1.5">
+                Adresse email
+              </label>
+              <input
+                type="email"
+                placeholder="prenom.nom@iutv.univ-paris13.fr"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleLogin()}
+                className="w-full px-4 py-3 text-sm border border-slate-200 rounded-xl outline-none text-[#0d2a4a] placeholder:text-slate-400 focus:border-[#0d4f8a] focus:ring-2 focus:ring-[#0d4f8a]/10 transition-all"
+              />
+            </div>
+
+            {/* Mot de passe */}
+            <div>
+              <label className="block text-xs font-semibold text-[#3d4f6e] mb-1.5">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showPwd ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleLogin()}
+                  className="w-full px-4 py-3 pr-11 text-sm border border-slate-200 rounded-xl outline-none text-[#0d2a4a] placeholder:text-slate-400 focus:border-[#0d4f8a] focus:ring-2 focus:ring-[#0d4f8a]/10 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPwd(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Bouton */}
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-70 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.99]"
+              style={{ background: "linear-gradient(135deg, #1a7fd4, #0d5fa8)" }}
+            >
+              {loading
+                ? <><Loader2 size={16} className="animate-spin" /> Connexion en cours...</>
+                : "Se connecter"
+              }
+            </button>
           </div>
 
-          <div style={styles.field}>
-            <label style={styles.label}>Mot de passe</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
-              style={styles.input}
-            />
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            style={{ ...styles.btn, opacity: loading ? 0.7 : 1 }}
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
+          {/* Footer */}
+          <p className="text-center text-xs text-slate-400 mt-10">
+            IUT de Villetaneuse · Université Sorbonne Paris Nord
+          </p>
         </div>
       </div>
     </div>
   )
-}
-
-const styles = {
-  page: { display: "flex", minHeight: "100vh", fontFamily: "'Segoe UI', sans-serif" },
-  left: { flex: 1, background: "linear-gradient(160deg, #0d6ebd 0%, #1a9fd4 50%, #0a4f8a 100%)", position: "relative", display: "flex", alignItems: "flex-end", padding: "3rem" },
-  overlay: { position: "absolute", inset: 0, background: "rgba(5, 40, 80, 0.35)" },
-  leftContent: { position: "relative", zIndex: 1 },
-  tagline: { color: "white", fontSize: "1.5rem", fontWeight: 300, margin: 0 },
-  right: { width: "460px", display: "flex", alignItems: "center", justifyContent: "center", background: "#f7f9fc", padding: "2rem" },
-  card: { width: "100%", maxWidth: "380px", background: "#fff", borderRadius: "16px", padding: "2.5rem 2rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" },
-  logos: { display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" },
-  logoIut: { height: "52px", objectFit: "contain" },
-  logoDivider: { width: "1px", height: "40px", background: "#dde3ec" },
-  logoSorb: { height: "70px", objectFit: "contain" },
-  title: { fontSize: "1.5rem", fontWeight: 700, color: "#0d2a4a", margin: "0 0 0.25rem" },
-  subtitle: { fontSize: "0.875rem", color: "#6b7a99", margin: "0 0 1.75rem" },
-  errorBox: { background: "#fff3f3", border: "1px solid #fbc5c5", borderRadius: "8px", padding: "0.75rem 1rem", fontSize: "0.875rem", color: "#c0392b", marginBottom: "1.25rem", display: "flex", alignItems: "center" },
-  field: { marginBottom: "1.25rem" },
-  label: { display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "#3d4f6e", marginBottom: "0.4rem" },
-  input: { width: "100%", padding: "0.65rem 0.875rem", border: "1.5px solid #dde3ec", borderRadius: "8px", outline: "none", color: "#0d2a4a" },
-  btn: { width: "100%", padding: "0.75rem", fontWeight: 600, background: "linear-gradient(135deg, #1a7fd4, #0d5fa8)", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", marginTop: "0.5rem" }
 }

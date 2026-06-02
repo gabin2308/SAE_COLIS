@@ -57,14 +57,14 @@ class DemandeAchatService:
         if demande.statut != 'en_attente':
             raise ValueError("Seules les demandes en attente peuvent être approuvées")
 
-        # Consomme le budget si un montant est estimé
         if demande.montant_estime and demande.montant_estime > 0:
             self.dep_service.consommer_budget(
                 demande.departement_id,
                 demande.montant_estime
             )
 
-        updated = self.dao.update_statut(id_demande, 'approuvee', commentaire)
+        # REMPLACER l'appel erroné par celui-ci :
+        updated = self.dao.approuver(id_demande, commentaire)
 
         self.notif.envoyer(
             demande.demandeur_id,
@@ -77,9 +77,9 @@ class DemandeAchatService:
         if demande.statut != 'en_attente':
             raise ValueError("Seules les demandes en attente peuvent être refusées")
 
-        updated = self.dao.update_statut(id_demande, 'refusee', commentaire)
+        # REMPLACER l'appel erroné par celui-ci :
+        updated = self.dao.refuser(id_demande, commentaire)
 
-        # Notifie le demandeur
         self.notif.envoyer(
             demande.demandeur_id,
             f"Votre demande '{demande.objet}' a été refusée."

@@ -158,16 +158,6 @@ class UtilisateurDAO:
         conn.commit()
         return self.get_by_id(id_utilisateur)
 
-    def update_password(self, id_utilisateur, nouveau_password):
-        conn = get_db()
-        conn.execute("""
-            UPDATE utilisateur SET password = ?
-            WHERE id_utilisateur = ?
-        """, (bcrypt.generate_password_hash(nouveau_password).decode('utf-8'), id_utilisateur))
-
-        conn.commit()
-        return self.get_by_id(id_utilisateur)
-
     def update_token(self, uid_cas, nouveau_token):
         conn = get_db()
         cursor = conn.execute("""
@@ -218,12 +208,14 @@ class UtilisateurDAO:
 
     def update_password(self, id_utilisateur, nouveau_password):
         conn = get_db()
-        # 1. Mise à jour du mot de passe haché
+        # On hache le nouveau mot de passe et on réinitialise le flag de changement forcé
+        password_hash = bcrypt.generate_password_hash(nouveau_password).decode('utf-8')
+        
         conn.execute("""
             UPDATE utilisateur 
             SET password = ?, password_must_change = 0
             WHERE id_utilisateur = ?
-        """, (bcrypt.generate_password_hash(nouveau_password).decode('utf-8'), id_utilisateur))
+        """, (password_hash, id_utilisateur))
 
         conn.commit()
         return self.get_by_id(id_utilisateur)
@@ -239,6 +231,24 @@ class UtilisateurDAO:
         cursor = conn.execute("""
             INSERT INTO utilisateur (fullName, email, password, role_id, departement_id, password_must_change)
             VALUES (?, ?, ?, ?, ?, 1)
+        """, (full_name, email, password_hash, role_id, departement_id))
+        
+        conn.commit()
+        return self.get_by_id(cursor.lastrowid)
+    
+    def create_user(self, full_name, email, password, role_id, departement_id):
+        # Vérification d'unicité
+        if self.get_by_email(email):
+            raise ValueError("Email déjà utilisé")
+
+        conn = get_db()
+        # Hachage du mot de passe fourni par l'admin
+        password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # Insertion avec password_must_change = 0 car le mot de passe est déjà connu
+        cursor = conn.execute("""
+            INSERT INTO utilisateur (fullName, email, password, role_id, departement_id, password_must_change)
+            VALUES (?, ?, ?, ?, ?, 0)
         """, (full_name, email, password_hash, role_id, departement_id))
         
         conn.commit()

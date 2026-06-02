@@ -1,8 +1,6 @@
 const BASE = "/api";
 
-export const apiFetch = async (url, options = {}) => {
-  // Détermination automatique du jeton à utiliser
-  // Priorité au token de changement s'il existe, sinon le token normal
+export const apiFetch = async (url, options = {}, isBlob = false) => {
   const changeToken = localStorage.getItem("change_token");
   const authToken = localStorage.getItem("token");
   const token = changeToken || authToken;
@@ -10,7 +8,8 @@ export const apiFetch = async (url, options = {}) => {
   const response = await fetch(`${BASE}${url}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      // On ne force le Content-Type que si ce n'est pas un blob (pour éviter les conflits)
+      ...(!isBlob && { "Content-Type": "application/json" }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
@@ -18,7 +17,6 @@ export const apiFetch = async (url, options = {}) => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Nettoyage complet en cas d'expiration
       localStorage.removeItem("token");
       localStorage.removeItem("change_token");
       localStorage.removeItem("pending_user_id");
@@ -34,6 +32,11 @@ export const apiFetch = async (url, options = {}) => {
       message = errorData || `Erreur ${response.status}`;
     }
     throw new Error(message);
+  }
+
+  // Si c'est un blob, on retourne le blob sans tenter de parser
+  if (isBlob) {
+    return await response.blob();
   }
 
   const text = await response.text();

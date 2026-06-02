@@ -98,9 +98,9 @@ class UserController:
         email = str(data.get('email', '')).strip()
         password = data.get('password')
         departement_id = data.get('departement_id')
-        role_id = 7  # lecteur par défaut
+        role_id = data.get('role_id')
 
-        if not all([full_name, email, password, departement_id is not None]):
+        if not all([full_name, email, password, departement_id is not None, role_id is not None]):
             return jsonify({"error": "Tous les champs sont requis"}), 400
 
         try:
@@ -127,6 +127,7 @@ class UserController:
                 "role": claims.get("role")
             }), 200
         except Exception as e:
+            logging.error(f"Erreur lors de la récupération des informations: {e}")
             return jsonify({"error": "Impossible de récupérer les informations"}), 401
 
 ctrl = UserController()

@@ -24,13 +24,13 @@ class AdminUserController:
     @login_required
     @reqrole('administrateur')
     def getAll(self):
-        users = self.us.get_all_users()
+        users = self.us.get_all()
         return jsonify([u.to_dict() for u in users]), 200
 
     @login_required
     @reqrole('administrateur')
     def getById(self, id_utilisateur):
-        user = self.us.get_user_by_id(id_utilisateur)
+        user = self.us.get_by_id(id_utilisateur)
         if not user:
             return jsonify({"error": "Utilisateur introuvable"}), 404
         return jsonify(user.to_dict()), 200
@@ -41,7 +41,7 @@ class AdminUserController:
         query = request.args.get('q', '').strip()
         if not query:
             return jsonify({"error": "Paramètre q requis"}), 400
-        users = self.us.search_users(query)
+        users = self.us.search(query)
         return jsonify([u.to_dict() for u in users]), 200
 
     @login_required
